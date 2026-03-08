@@ -27,7 +27,7 @@ const registerAdmin = async (req, res) => {
             token: generateToken(admin._id)
         });
     } catch (err) {
-        console.error('registerAdmin error:', err.message);
+        console.error('registerAdmin error:', err);
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 };
