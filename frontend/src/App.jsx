@@ -6,6 +6,7 @@ import Instructions from './pages/Instructions';
 import Game from './pages/Game';
 import Level2 from './pages/Level2';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -38,6 +39,7 @@ function App() {
       <Routes>
         <Route path="/" element={token && !user?.isLocked ? (user?.role === 'admin' ? <Navigate to="/dashboard" /> : <Navigate to="/instructions" />) : <Login />} />
         <Route path="/register" element={token ? (user?.role === 'admin' ? <Navigate to="/dashboard" /> : <Navigate to="/instructions" />) : <Register />} />
+        <Route path="/admin" element={token && user?.role === 'admin' ? <Navigate to="/dashboard" /> : <AdminLogin />} />
         <Route path="/instructions" element={<ProtectedRoute><Instructions /></ProtectedRoute>} />
         <Route path="/game" element={<ProtectedRoute>{(user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? <Navigate to="/level2" /> : <Game />}</ProtectedRoute>} />
         <Route path="/level2" element={<ProtectedRoute><Level2 /></ProtectedRoute>} />
