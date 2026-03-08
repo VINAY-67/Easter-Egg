@@ -12,9 +12,14 @@ const registerUser = async (req, res) => {
         if (!name || !email || !password)
             return res.status(400).json({ message: 'All fields are required' });
 
-        const existing = await User.findOne({ email });
+        const existing = await User.findOne({
+            $or: [
+                { email },
+                { name }
+            ]
+        });
         if (existing)
-            return res.status(409).json({ message: 'Email already registered' });
+            return res.status(409).json({ message: 'Email / username already registered' });
 
         const user = new User({ name, email, HashedPassword: '' });
         await user.hashPassword(password);
@@ -51,7 +56,7 @@ const loginUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
 
         if (user.isLocked)
-            return res.status(403).json({ message: 'Account locked. All trials exhausted.' });
+            return res.status(403).json({ message: 'You are eliminated! You cannot login using these credentials.' });
 
         const isMatch = await user.matchPassword(password);
         if (!isMatch)
@@ -83,14 +88,14 @@ const loginUser = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        const { round, action } = req.body;
+        const { round, action, amount = 1 } = req.body;
         // action: 'lose-life' | 'complete' | 'start'
 
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         if (user.isLocked)
-            return res.status(403).json({ message: 'Account locked. No more trials remain.' });
+            return res.status(403).json({ message: 'You are eliminated! No more trials remain.' });
 
         if (action === 'start') {
             user.HasStarted = true;
@@ -98,7 +103,7 @@ const updateUser = async (req, res) => {
         }
 
         if (action === 'lose-life') {
-            const currentTries = (user.numberofTries[round] || 0) + 1;
+            const currentTries = (user.numberofTries[round] || 0) + Number(amount);
 
             if (currentTries >= 3) {
                 user.numberofTries[round] = 3;
@@ -106,9 +111,17 @@ const updateUser = async (req, res) => {
                 user.Status = 'eliminated';
                 await user.save();
                 return res.status(200).json({
-                    message: 'Your trials have been exhausted. No more trials remain.',
+                    message: 'You are eliminated! You have exhausted all 3 lives for this round.',
                     isLocked: true,
                     livesLeft: 0,
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        Status: user.Status,
+                        isLocked: user.isLocked,
+                        numberofTries: user.numberofTries,
+                        livesLeft: 0
+                    }
                 });
             }
 

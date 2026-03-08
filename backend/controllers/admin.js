@@ -6,6 +6,37 @@ const { calculateRank } = require('../utils/calculateDashboard');
 const generateToken = (id) =>
     jwt.sign({ id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
+// POST /api/admin/register
+const registerAdmin = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password)
+            return res.status(400).json({ message: 'Username and password are required' });
+
+        const existing = await Admin.findOne({ username });
+        if (existing)
+            return res.status(409).json({ message: 'Admin username already exists' });
+
+        // Password hash happens in the pre-save hook of the Admin model
+        const admin = new Admin({ username, password });
+        await admin.save();
+
+        res.status(201).json({
+            message: 'Admin registered successfully',
+            token: generateToken(admin._id),
+            admin: {
+                id: admin._id,
+                username: admin.username,
+                role: 'admin'
+            }
+        });
+    } catch (err) {
+        console.error('registerAdmin error:', err.message);
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};
+
 // POST /api/admin/login
 const loginAdmin = async (req, res) => {
     try {
@@ -63,4 +94,4 @@ const getUsersData = async (req, res) => {
     }
 };
 
-module.exports = { loginAdmin, getUsersData };
+module.exports = { registerAdmin, loginAdmin, getUsersData };
