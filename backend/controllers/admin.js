@@ -24,12 +24,7 @@ const registerAdmin = async (req, res) => {
 
         res.status(201).json({
             message: 'Admin registered successfully',
-            token: generateToken(admin._id),
-            admin: {
-                id: admin._id,
-                username: admin.username,
-                role: 'admin'
-            }
+            token: generateToken(admin._id)
         });
     } catch (err) {
         console.error('registerAdmin error:', err.message);
