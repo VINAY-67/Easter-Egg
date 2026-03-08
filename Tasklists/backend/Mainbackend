@@ -1,0 +1,131 @@
+<persona>
+Act as a backend developer is a detail-oriented, analytical problem-solver focused on logic, database management, and API efficiency. You bridge infrastructure with functionality, prioritizing security, system scalability, and performance. you work collaboratively with frontend teams to create robust, behind-the-scenes server-side logic. 
+</persona>
+<context>
+ You have done writing the frontend code (almost with some tweaking needed), you are working on the backend but you dont have much time you are give with a lot of work but to implement them in a best manner that backend performs the besta nd you use mern stack for the backend , so use mongoDb , mongoose ,express , and npm . you are given with the lot of folders in the cresence_backend folder , there were folders like /models , /controllers , /routes and i want you to make the code much clean and organised (modular ) as planned in here , i want you to design and implement the entire backend as given below the folderr structure of the backned folder is as fallows
+
+# backend structure
+    AlgoQuest_backend/
+    ├── controllers/ 
+    │ ├── user.js 
+    │ ├── admin.js  
+    ├── middlewares/ 
+    │ └── adminauth.js 
+    ├── models/ 
+    │ ├── user.js 
+    │ ├── admin.js  
+    ├── routes/ 
+    │ ├── user.js 
+    │ ├── admin.js  
+    ├── utils/ 
+    │ ├── db.js 
+    │ └── calculatedashboard.js 
+    ├── .env 
+    ├── index.js 
+    └── package.json
+
+
+</context>
+<implementation>
+i want you to push or generate the particular code as per the particular file that it was assigned to it ,
+<tasks>
+# models  
+this is the predefined folder in which some files as created and  the structure of the Schemas are used to  defined by you !! for the backend
+    /user.js :
+        the key fields include
+            {
+                name:
+                email:
+                HassedPasswrod:
+                HasPlayed :{
+                    Round-1:
+                    Round-2:
+                    Round-3:
+                }
+                Scores:{
+                    Round-1:
+                    Round-2:
+                    Round-3:
+                }
+                HasWon:
+                Hasstarted :
+                Status:[playing,won,lose,eliminated]
+                numberoftries:{
+                    Round-1:{max-3}
+                    Round-2:{max-3}
+                    Round-3:{max-3}
+                }
+            }
+        This is my own deinfed Schema if anything found usefulon your thinking add that 
+
+    /admin.js :
+        i have no ideas to define this Schema, this must include a name , passowrd that can be accessed only by one memberr and this is used to show the players dashboard along with the scores that the players got till this round they are playing currently 
+ 
+# routes
+this is the folder where all the routes are being assinged as per the file name , every route file must use express.router and user the assigned tasks to it and ,place the designed code in the respective filename ,use params , and getuser by ids etc... every route will start as /api/register and /api/login etc.....
+
+the routes you need to define were these
+    /user.js
+        -post : (/register) ->this route is used to regsiter the user
+        -post:(/login) :this route provides the funionality of logging the user 
+        -put:(/:userId/updateuser) : this route perfomr the updation of the user scores,states etc....
+
+    /admin.js :
+        -post: (/login) ->this route is used to login the admin and authenticate him
+        the payload was coming was 
+        {
+            username:
+            password:
+        }
+        authenticate the user based on the details he was giving it to you
+        -get:(/:adminId/dashboard) ->this will return the entire information that was given to show details in the dashboard
+
+# controller
+the functionality that was assigned in the routes that need to be written inside the designed folder and the designated file. for example : in the route register user is designed in users, then the functionality is developed inside user.js file inside the controllers folder
+
+user.js
+    registerUser ->this controller is used to take the paylaod that was coming from the frontend and you need to register that particular user in the backend 
+            payload :{
+                name:
+                email:
+                password:
+            }
+
+            now i want you to take this payloadd and store this in the user schema , during storing the payload you need to create the password on your own dynamically the password must be the exact password given by the user and encrypt it and then store it inside the DB , and use Schema.method for encryption and Schema.method for wuthentication on the go of creating an Schema object. y deaful
+        -loginUser :this controller provides the funionality of logging the user 
+            for the lgin of the user you have given with the paylaod of 
+            {
+                name:
+                password:
+            } 
+            you need to check the given password with the hashed one and the teamname and login the user based on the result 
+        -updateUser : this controller performs the updation of the scores of the user for the particular round he was playing ,and the state he was in and etc.....for every update function count the number of trails he have done for that particular round , if it was more than or equal to 3 just simply tell "your trails have done no more trails remain "..
+        -getuserbyid:this controller takes the user id from the params and find that user in the usersSchema . for this use router.params 
+admin.js
+     -loginadmin ->this controller is used to login the admin andd authenticate him
+        the payload was coming was 
+        {
+            username:
+            password:
+        }
+        authenticate the user based on the detaisl he was giving it to you
+        -getusersData ->this will retur the entire information that was given to show detaisl in the dashboard
+        first fetch all the user and authenticate he was admin no others cannot fetch the userdetails for the dashboard , and show the user details along with the round number they have reaached in the event and place them in the descending order based on their round they are in , the dashbaord must show the name of the player , the round he was in , no of trails he have done there in that particular round !!
+
+
+# utils
+configure the database here and calclating the score here insidde the files that are created here
+
+# middlewares
+the only one middlware is defined here that used to authenticate the admin write th logic hre 
+
+first create the actual boilerplate that every server have like cors and the app.use body parsers etc.....
+before going to the actual configuration first configure the basic settings , configure the backend use the db details as in the env BACKEND_URL and jwt secret also
+</tasks>
+
+do these taks without making any errors and do note that every file and it situated code wasaa written at the correct file and the import and exports are correct 
+</implementation>
+<output>
+complete the entire tasks that are given here and gimme the detailed end to end roadimap showing the payload that used to send from the frontend to the backend and how the flow was going on, then bottlenecks here and how they are being resolved 
+final completion.md file must include all of them and give me a clean , non blocking , best architectured , clean baackend code 
+</output>
