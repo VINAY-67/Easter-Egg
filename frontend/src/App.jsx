@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Instructions from './pages/Instructions';
 import Game from './pages/Game';
 import Level2 from './pages/Level2';
+import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -13,11 +15,18 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const AdminRoute = ({ children }) => {
+  const { token, user } = useAuth();
+  if (!token) return <Navigate to="/" />;
+  if (user?.role !== 'admin') return <Navigate to="/instructions" />;
+  return children;
+};
+
 // Simple locked out component
 const LockedOut = () => (
   <div className="locked-container">
-    <h1>Account Locked</h1>
-    <p>You have exhausted all your trials.</p>
+    <h1>Eliminated!</h1>
+    <p>You have exhausted all your 3 lives for this round and have been eliminated.</p>
   </div>
 );
 
@@ -27,10 +36,12 @@ function App() {
   return (
     <div className="app-container">
       <Routes>
-        <Route path="/" element={token && !user?.isLocked ? <Navigate to="/instructions" /> : <Login />} />
+        <Route path="/" element={token && !user?.isLocked ? (user?.role === 'admin' ? <Navigate to="/dashboard" /> : <Navigate to="/instructions" />) : <Login />} />
+        <Route path="/register" element={token ? (user?.role === 'admin' ? <Navigate to="/dashboard" /> : <Navigate to="/instructions" />) : <Register />} />
         <Route path="/instructions" element={<ProtectedRoute><Instructions /></ProtectedRoute>} />
-        <Route path="/game" element={<ProtectedRoute><Game /></ProtectedRoute>} />
+        <Route path="/game" element={<ProtectedRoute>{(user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? <Navigate to="/level2" /> : <Game />}</ProtectedRoute>} />
         <Route path="/level2" element={<ProtectedRoute><Level2 /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/locked" element={<LockedOut />} />
       </Routes>
     </div>

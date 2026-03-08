@@ -5,7 +5,7 @@ import Cell from '../components/Cell';
 import confetti from 'canvas-confetti';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Particles from '../components/Particles';
+import { API } from '../backend';
 
 const Game = () => {
     const { user, token, updateUser, logout } = useAuth();
@@ -21,43 +21,81 @@ const Game = () => {
     useEffect(() => {
         if (!startApiCalled.current && user) {
             startApiCalled.current = true;
-            console.log("Mock: Game Started");
+            fetch(`${API}/${user.id}/updateuser`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ round: 'Round-1', action: 'start' })
+            }).catch(err => console.error("Failed to start round", err));
         }
-    }, [user]);
+    }, [user, token]);
 
     // Handle Loss
     useEffect(() => {
         if (lossPending) {
             setLossPending(false);
+            const updateLife = async () => {
+                try {
+                    const res = await fetch(`${API}/${user.id}/updateuser`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ round: 'Round-1', action: 'lose-life' })
+                    });
+                    const data = await res.json();
 
-            const newLives = lives - 1;
-            setLives(newLives);
+                    if (!res.ok) throw new Error(data.message || 'Error updating life');
 
-            if (newLives <= 0) {
-                updateUser({ ...user, isLocked: true });
-                navigate('/locked');
-            } else {
-                updateUser({
-                    ...user,
-                    numberofTries: {
-                        ...user.numberofTries,
-                        'Round-1': 3 - newLives
+                    if (data.user) {
+                        updateUser({
+                            ...user,
+                            numberofTries: data.user.numberofTries,
+                            isLocked: data.user.isLocked,
+                            Status: data.user.Status
+                        });
+                        setLives(3 - (data.user.numberofTries['Round-1'] || 0));
+
+                        if (data.user.isLocked) {
+                            navigate('/locked');
+                        } else {
+                            setShowLossOverlay(true);
+                        }
+                    } else if (data.isLocked) {
+                        // Fallback for eliminated user
+                        updateUser({ ...user, isLocked: true });
+                        navigate('/locked');
                     }
-                });
-                setShowLossOverlay(true);
-            }
+                } catch (err) {
+                    console.error("Failed to update life:", err);
+                }
+            };
+            updateLife();
         }
-    }, [lossPending, user, updateUser, navigate, setLossPending, lives]);
+    }, [lossPending, user, token, updateUser, navigate, setLossPending]);
 
     // Handle Win
     useEffect(() => {
         if (winPending) {
             setWinPending(false);
-            updateUser({ ...user, HasWon: true });
-            setShowWinOverlay(true);
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            const markWin = async () => {
+                try {
+                    const res = await fetch(`${API}/${user.id}/updateuser`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ round: 'Round-1', action: 'complete' })
+                    });
+                    const data = await res.json();
+
+                    if (data.user) {
+                        updateUser({ ...user, HasWon: data.user.HasWon });
+                        setShowWinOverlay(true);
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    }
+                } catch (err) {
+                    console.error("Failed to mark win:", err);
+                }
+            };
+            markWin();
         }
-    }, [winPending, user, updateUser, setWinPending]);
+    }, [winPending, user, token, updateUser, setWinPending]);
 
     const handleRestart = () => {
         setShowLossOverlay(false);
@@ -69,9 +107,11 @@ const Game = () => {
         navigate('/');
     };
 
+    // If overlays exist, user shouldn't click board
+    const isGamePaused = showLossOverlay || showWinOverlay;
+
     return (
         <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', padding: '20px' }}>
-            <Particles />
             <div className="game-container">
                 <motion.div
                     initial={{ y: -50, opacity: 0 }}
@@ -95,8 +135,8 @@ const Game = () => {
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="board"
-                    style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}
+                    className={`board ${isGamePaused ? 'paused-board' : ''}`}
+                    style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)`, pointerEvents: isGamePaused ? 'none' : 'auto' }}
                 >
                     {board.map((row, r) => (
                         row.map((cell, c) => (
@@ -130,8 +170,8 @@ const Game = () => {
                                 <h2 style={{ color: 'var(--danger)', textShadow: '0 0 20px rgba(255, 118, 117, 0.5)' }}>Ouch!</h2>
                                 <p style={{ fontSize: '1.2rem', marginBottom: '10px' }}>You hit a Jasmine! You lost a life.</p>
                                 <div style={{ fontSize: '2rem', margin: '20px 0', letterSpacing: '5px' }}>
-                                    {'❤️'.repeat(lives)}
-                                    <span style={{ opacity: 0.3 }}>{'💔'.repeat(3 - lives)}</span>
+                                    {'❤️'.repeat(lives > 0 ? lives : 0)}
+                                    <span style={{ opacity: 0.3 }}>{'💔'.repeat(3 - (lives > 0 ? lives : 0))}</span>
                                 </div>
                                 <motion.button
                                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}

@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import Particles from '../components/Particles';
+
+import { gameRules, roundData, eventDetails } from '../assets/data';
 
 const Instructions = () => {
     const navigate = useNavigate();
@@ -9,7 +10,7 @@ const Instructions = () => {
 
     return (
         <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-            <Particles />
+            
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -43,10 +44,20 @@ const Instructions = () => {
                         style={{ padding: '20px', background: 'rgba(253, 203, 110, 0.1)', border: '1px solid rgba(253, 203, 110, 0.3)', borderRadius: '12px', marginTop: '30px' }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <strong>Round 1:</strong> <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>Ready to play</span>
+                            <strong>Round 1:</strong>
+                            {user?.Scores?.['Round-1'] > 0 || user?.HasWon ? (
+                                <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span>
+                            ) : (
+                                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Ready to play</span>
+                            )}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', opacity: 0.5 }}>
-                            <strong>Round 2:</strong> <span>Coming Soon...</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', opacity: (user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? 1 : 0.5 }}>
+                            <strong>Round 2:</strong>
+                            {(user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? (
+                                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Unlocked</span>
+                            ) : (
+                                <span>Complete Round 1 first...</span>
+                            )}
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5 }}>
                             <strong>Round 3:</strong> <span>Coming Soon...</span>
@@ -55,22 +66,27 @@ const Instructions = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '20px', marginTop: '40px', width: '100%', justifyContent: 'center' }}>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/level2')}
-                        className="styled-button-outline"
-                    >
-                        Go to Level 2
-                    </motion.button>
-                    <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(85, 239, 196, 0.4)" }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/game')}
-                        className="styled-button"
-                        style={{ background: 'linear-gradient(45deg, #00b894, #55efc4)' }}
-                    >
-                        Start Round 1
-                    </motion.button>
+                    {(user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? (
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(85, 239, 196, 0.4)" }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/level2')}
+                            className="styled-button"
+                            style={{ background: 'linear-gradient(45deg, #00b894, #55efc4)' }}
+                        >
+                            Proceed to Level 2
+                        </motion.button>
+                    ) : (
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(253, 203, 110, 0.4)" }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/game')}
+                            className="styled-button"
+                            style={{ background: 'linear-gradient(45deg, #e17055, #fdcb6e)' }}
+                        >
+                            Start Round 1
+                        </motion.button>
+                    )}
                 </div>
             </motion.div>
         </div>
