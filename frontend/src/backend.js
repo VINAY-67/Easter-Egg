@@ -1,1 +1,1 @@
-export const API="https://easter-egg-f3nd.onrender.com"
+export const API="https://easter-egg-f3nd.onrender.com/api"
