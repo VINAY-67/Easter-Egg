@@ -30,7 +30,6 @@ const AdminDashboard = () => {
 
                 setUsers(data.players || []);
             } catch (err) {
-                console.error("Dashboard fetch error:", err);
                 setError(err.message);
             } finally {
                 setIsLoading(false);

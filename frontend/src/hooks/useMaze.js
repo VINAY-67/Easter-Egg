@@ -81,9 +81,7 @@ export const useMaze = (rows = 20, cols = 20) => {
             return null;
         };
 
-        const solution = findPath();
-        console.log("LEVEL 2 - SECRET E-PATH DECODED (Solution):", solution);
-        console.log("LEVEL 2 - Mission: Navigate the 'E' to find the Red Core.");
+        findPath();
 
         setMaze(newMaze);
         setPlayerPos({ r: 0, c: 0 });

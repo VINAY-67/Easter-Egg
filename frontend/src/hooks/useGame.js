@@ -56,16 +56,8 @@ export const useGame = () => {
         setGameWon(false);
         setLossPending(false);
         setWinPending(false);
-
-        // Debug: Print mine locations
-        const mineLocations = [];
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                if (newBoard[r][c].isMine) mineLocations.push({ r, c });
-            }
-        }
-        console.log("Jasmine (mine) locations:", mineLocations);
-    }, []);
+    }
+        , []);
 
     useEffect(() => {
         initBoard();
