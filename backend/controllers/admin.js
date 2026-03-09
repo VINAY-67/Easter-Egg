@@ -51,6 +51,11 @@ const loginAdmin = async (req, res) => {
         res.status(200).json({
             message: 'Admin login successful',
             token: generateToken(admin._id),
+            admin: {
+                id: admin._id,
+                username: admin.username,
+                role: admin.role || 'admin',
+            }
         });
     } catch (err) {
         console.error('loginAdmin error:', err.message);
