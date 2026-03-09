@@ -56,6 +56,15 @@ export const useGame = () => {
         setGameWon(false);
         setLossPending(false);
         setWinPending(false);
+
+        // Debug: Print mine locations
+        const mineLocations = [];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (newBoard[r][c].isMine) mineLocations.push({ r, c });
+            }
+        }
+        console.log("Jasmine (mine) locations:", mineLocations);
     }, []);
 
     useEffect(() => {
@@ -71,19 +80,18 @@ export const useGame = () => {
         if (newBoard[r][c].isMine) {
             newBoard[r][c].isRevealed = true;
             setBoard(newBoard);
+            setGameOver(true); // Stop further clicks immediately
             setLossPending(true); // Trigger API call for life loss
             return;
         }
 
         // Flood fill (BFS)
         const queue = [[r, c]];
-        let cellsRevealedThisTurn = 0;
 
         while (queue.length > 0) {
             const [currR, currC] = queue.shift();
             if (!newBoard[currR][currC].isRevealed) {
                 newBoard[currR][currC].isRevealed = true;
-                cellsRevealedThisTurn++;
 
                 if (newBoard[currR][currC].neighborMines === 0) {
                     for (let dr = -1; dr <= 1; dr++) {
@@ -106,12 +114,25 @@ export const useGame = () => {
     const toggleFlag = (r, c, e) => {
         e.preventDefault();
         if (gameOver || gameWon || board[r][c].isRevealed) return;
-        let newBoard = [...board];
+        let newBoard = [...board].map(row => [...row]);
         newBoard[r][c].isFlagged = !newBoard[r][c].isFlagged;
-        setBoard([...newBoard]);
+        setBoard(newBoard);
     };
 
     const checkWinCondition = (currentBoard) => {
+        // Double check we haven't lost this turn
+        let mineHit = false;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (currentBoard[r][c].isMine && currentBoard[r][c].isRevealed) {
+                    mineHit = true;
+                    break;
+                }
+            }
+            if (mineHit) break;
+        }
+        if (mineHit) return;
+
         let unrevealedSafe = 0;
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {

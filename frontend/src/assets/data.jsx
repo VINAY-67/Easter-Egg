@@ -58,6 +58,6 @@ export const eventDetails = {
     description: "This is an Easter Egg hunt based game comprising 3 rounds.",
     subtitle: "Round 1 (Level 1) - Minesweeper Style",
     level2Title: "Level 2",
-    level2Subtitle: "Coming Soon...",
-    level2Desc: "The hunt continues! But our engineers are still hiding the eggs in this level. Check back later!"
+    level2Subtitle: "Maze Escape",
+    level2Desc: "Navigate through a dark maze with limited vision to find the hidden Easter Egg. Use Arrow Keys or WASD to move through the darkness!"
 };

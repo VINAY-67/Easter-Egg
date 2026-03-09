@@ -23,11 +23,11 @@ const Register = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, email, password })
             });
- 
+
             const data = await res.json();
 
             if (!res.ok) {
-                throw new  Error(data.message || 'Registration failed');
+                throw new Error(data.message || 'Registration failed');
             }
 
             // Registration success, navigate to login
@@ -41,7 +41,7 @@ const Register = () => {
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            
+
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -90,6 +90,26 @@ const Register = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                    </div>
+                    <div
+                        style={{
+                            width: '100%',
+                            maxWidth: '400px',
+                            padding: '15px',
+                            background: 'rgba(255, 184, 108, 0.05)',
+                            border: '1px dashed rgba(255, 184, 108, 0.4)',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'flex-start',
+                            marginTop: '10px'
+                        }}
+                    >
+                        <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 5px #ffb86c)' }}>⚠️</span>
+                        <div style={{ fontSize: '0.85rem', color: '#ffb86c', textAlign: 'left', lineHeight: '1.4' }}>
+                            <strong style={{ display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>Mandatory Verification</strong>
+                            Please use your <span style={{ textDecoration: 'underline' }}>ORIGINAL email</span>. Winners will be contacted exclusively via the provided address. Dummy/invalid emails will result in disqualification.
+                        </div>
                     </div>
                     <motion.button
                         whileHover={{ scale: 1.05, boxShadow: "0px 0px 15px rgba(85, 239, 196, 0.6)" }}

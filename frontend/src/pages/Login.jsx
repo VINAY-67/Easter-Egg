@@ -11,7 +11,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
-    const { login } = useAuth();
+    const { login, intendedPath, setIntendedPath } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -44,6 +44,10 @@ const Login = () => {
 
             if (data.user.isLocked) {
                 navigate('/locked');
+            } else if (intendedPath) {
+                const path = intendedPath;
+                setIntendedPath(null);
+                navigate(path);
             } else {
                 navigate('/instructions');
             }
@@ -57,7 +61,7 @@ const Login = () => {
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            
+
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}

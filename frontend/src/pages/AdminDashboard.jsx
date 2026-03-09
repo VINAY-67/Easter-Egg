@@ -21,15 +21,16 @@ const AdminDashboard = () => {
 
         const fetchDashboards = async () => {
             try {
-                const res = await fetch(`${API}/admin/${user.id}/dashboard`, {
+                const res = await fetch(`${API}/admin/${user._id}/dashboard`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
 
                 if (!res.ok) throw new Error(data.message || 'Failed to fetch dashboard');
 
-                setUsers(data.users || []);
+                setUsers(data.players || []);
             } catch (err) {
+                console.error("Dashboard fetch error:", err);
                 setError(err.message);
             } finally {
                 setIsLoading(false);
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
 
     return (
         <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', padding: '40px 20px', color: '#dcdde1' }}>
-            
+
             <div className="glassmorphism" style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px' }}>
                     <h1 style={{ background: 'linear-gradient(90deg, #fdcb6e, #e17055)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
@@ -74,6 +75,8 @@ const AdminDashboard = () => {
                                     <th style={{ padding: '15px' }}>Name</th>
                                     <th style={{ padding: '15px' }}>Email</th>
                                     <th style={{ padding: '15px' }}>Status</th>
+                                    <th style={{ padding: '15px' }}>Round</th>
+                                    <th style={{ padding: '15px' }}>Level</th>
                                     <th style={{ padding: '15px' }}>Matches Played</th>
                                     <th style={{ padding: '15px' }}>Has Won</th>
                                     <th style={{ padding: '15px' }}>Locked Out</th>
@@ -82,7 +85,7 @@ const AdminDashboard = () => {
                             <tbody>
                                 {users.map((u, i) => (
                                     <motion.tr
-                                        key={u._id}
+                                        key={u.id || u._id}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
@@ -95,7 +98,16 @@ const AdminDashboard = () => {
                                                 {u.Status}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '15px', textAlign: 'center' }}>{u.numberofTries ? u.numberofTries["Round-1"] : 0}</td>
+                                        <td style={{ padding: '15px', textAlign: 'center' }}>{u.currentRound || 0}</td>
+                                        <td style={{ padding: '15px', fontSize: '0.85rem' }}>
+                                            {u.currentRound === 1 && "Minesweeper"}
+                                            {u.currentRound === 2 && "Maze Escape"}
+                                            {u.currentRound === 3 && "Sliding Puzzle"}
+                                            {!u.currentRound || u.currentRound === 0 ? "Not Started" : ""}
+                                        </td>
+                                        <td style={{ padding: '15px', textAlign: 'center' }}>
+                                            {u.numberofTries ? u.numberofTries["Round-1"] : 0}
+                                        </td>
                                         <td style={{ padding: '15px' }}>{u.HasWon ? '✅' : '❌'}</td>
                                         <td style={{ padding: '15px' }}>{u.isLocked ? <span style={{ color: 'var(--danger)' }}>Yes</span> : 'No'}</td>
                                     </motion.tr>

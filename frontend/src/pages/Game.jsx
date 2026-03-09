@@ -21,7 +21,7 @@ const Game = () => {
     useEffect(() => {
         if (!startApiCalled.current && user) {
             startApiCalled.current = true;
-            fetch(`${API}/${user.id}/updateuser`, {
+            fetch(`${API}/${user._id}/updateuser`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ round: 'Round-1', action: 'start' })
@@ -35,7 +35,7 @@ const Game = () => {
             setLossPending(false);
             const updateLife = async () => {
                 try {
-                    const res = await fetch(`${API}/${user.id}/updateuser`, {
+                    const res = await fetch(`${API}/${user._id}/updateuser`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                         body: JSON.stringify({ round: 'Round-1', action: 'lose-life' })
@@ -77,7 +77,7 @@ const Game = () => {
             setWinPending(false);
             const markWin = async () => {
                 try {
-                    const res = await fetch(`${API}/${user.id}/updateuser`, {
+                    const res = await fetch(`${API}/${user._id}/updateuser`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                         body: JSON.stringify({ round: 'Round-1', action: 'complete' })
@@ -85,9 +85,12 @@ const Game = () => {
                     const data = await res.json();
 
                     if (data.user) {
-                        updateUser({ ...user, HasWon: data.user.HasWon });
+                        updateUser(data.user);
                         setShowWinOverlay(true);
+                        // Trigger confetti multiple times for better effect
                         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                        setTimeout(() => confetti({ particleCount: 100, spread: 90, origin: { y: 0.7 } }), 200);
+                        setTimeout(() => confetti({ particleCount: 100, spread: 120, origin: { y: 0.8 } }), 400);
                     }
                 } catch (err) {
                     console.error("Failed to mark win:", err);
@@ -107,8 +110,8 @@ const Game = () => {
         navigate('/');
     };
 
-    // If overlays exist, user shouldn't click board
-    const isGamePaused = showLossOverlay || showWinOverlay;
+    // If overlays exist or win/loss is pending, user shouldn't click board
+    const isGamePaused = showLossOverlay || showWinOverlay || lossPending || winPending;
 
     return (
         <div style={{ position: 'relative', width: '100vw', minHeight: '100vh', padding: '20px' }}>
@@ -198,7 +201,7 @@ const Game = () => {
                                 <p style={{ fontSize: '1.2rem', marginBottom: '30px' }}>You successfully found the Easter Egg by avoiding all Jasmine traps!</p>
                                 <motion.button
                                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => navigate('/level2')}
+                                    onClick={() => navigate('/instructions')}
                                     className="styled-button"
                                     style={{ background: 'linear-gradient(45deg, #00b894, #55efc4)' }}
                                 >

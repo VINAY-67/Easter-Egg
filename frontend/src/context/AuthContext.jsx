@@ -6,6 +6,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [intendedPath, setIntendedPath] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('jasmineToken') || null);
 
     useEffect(() => {
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, token, login, logout, updateUser, intendedPath, setIntendedPath }}>
             {children}
         </AuthContext.Provider>
     );
