@@ -59,6 +59,17 @@ const Instructions = () => {
                                 <li>Click a tile adjacent to the empty space to move it.</li>
                                 <li>Solving this will grant you final S-Level clearance.</li>
                             </ul>
+                            {user?.Scores?.['Round-3'] > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    style={{ marginTop: '20px', padding: '20px', background: 'rgba(85, 239, 196, 0.1)', border: '1px solid rgba(85, 239, 196, 0.3)', borderRadius: '12px', textAlign: 'center' }}
+                                >
+                                    <p style={{ color: '#55efc4', fontWeight: 'bold', fontSize: '1.1rem', margin: 0 }}>
+                                        First round completed. Wait for the second egg to appear
+                                    </p>
+                                </motion.div>
+                            )}
                         </>
                     )}
 
@@ -76,23 +87,13 @@ const Instructions = () => {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <strong>Level 3:</strong>
-                            {user?.Scores?.['Round-3'] > 0 ? <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span> : user?.Scores?.['Round-2'] > 0 ? <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Unlocked</span> : <span style={{ opacity: 0.5 }}>Locked</span>}
+                            {user?.Scores?.['Round-3'] > 0 ? <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span> : <span style={{ opacity: 0.5 }}>Locked</span>}
                         </div>
                     </motion.div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '20px', marginTop: '40px', width: '100%', justifyContent: 'center' }}>
-                    {user?.Scores?.['Round-2'] > 0 ? (
-                        <motion.button
-                            whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(241, 196, 15, 0.4)" }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => navigate('/slider')}
-                            className="styled-button"
-                            style={{ background: 'linear-gradient(45deg, #f1c40f, #f39c12)' }}
-                        >
-                            Proceed to Level 3
-                        </motion.button>
-                    ) : (user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? (
+                    {(user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? (
                         <motion.button
                             whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(85, 239, 196, 0.4)" }}
                             whileTap={{ scale: 0.95 }}

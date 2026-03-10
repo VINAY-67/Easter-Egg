@@ -21,9 +21,12 @@ const Slider = () => {
     const [timer, setTimer] = useState(0);
     const [showInstructions, setShowInstructions] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [alreadyCompleted, setAlreadyCompleted] = useState(user?.Scores?.['Round-3'] > 0);
 
     useEffect(() => {
-        initGame();
+        if (!alreadyCompleted) {
+            initGame();
+        }
     }, []);
 
     useEffect(() => {
@@ -145,64 +148,85 @@ const Slider = () => {
                 </div>
             </motion.header>
 
-            <main className="stage">
-                <div className="board-frame">
-                    <div className="scanline" />
-                    <div
-                        className={`puzzle-board ${solved ? 'is-solved' : ''}`}
-                        style={{
-                            gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-                            aspectRatio: '1/1'
-                        }}
-                    >
-                        {!solved && tiles.map((tile, index) => {
-                            const isEmpty = tile === TOTAL_TILES - 1;
-                            const correctRow = Math.floor(tile / GRID_SIZE);
-                            const correctCol = tile % GRID_SIZE;
-
-                            const bgPosX = (correctCol / (GRID_SIZE - 1)) * 100;
-                            const bgPosY = (correctRow / (GRID_SIZE - 1)) * 100;
-
-                            return (
-                                <motion.div
-                                    key={tile}
-                                    layout
-                                    transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                                    className={`tile-node ${isEmpty ? 'node-empty' : 'node-active'}`}
-                                    onClick={() => handleTileClick(index)}
-                                    whileHover={!isEmpty ? { scale: 1.02, filter: 'brightness(1.2)' } : {}}
-                                    whileTap={!isEmpty ? { scale: 0.98 } : {}}
-                                    style={!isEmpty ? {
-                                        backgroundImage: `url(${PUZZLE_IMAGE})`,
-                                        backgroundSize: `${GRID_SIZE * 100}% ${GRID_SIZE * 100}%`,
-                                        backgroundPosition: `${bgPosX}% ${bgPosY}%`,
-                                    } : {}}
-                                >
-                                    {!isEmpty && <div className="tile-edge" />}
-                                    {!isEmpty && <span className="tile-id">{tile + 1}</span>}
-                                </motion.div>
-                            );
-                        })}
-                        {solved && (
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="solved-image"
-                                style={{ backgroundImage: `url(${PUZZLE_IMAGE})` }}
-                            />
-                        )}
+            {alreadyCompleted && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="already-completed-overlay"
+                >
+                    <div className="already-completed-box">
+                        <div className="completed-icon">🔒</div>
+                        <h2>Level Already Completed</h2>
+                        <p>You have already completed this level. Cannot play multiple times!</p>
+                        <button className="return-btn" onClick={() => navigate('/instructions')}>
+                            Return to Instructions
+                        </button>
                     </div>
-                </div>
-            </main>
+                </motion.div>
+            )}
 
-            <footer className="h-footer">
-                <div className="instruction-text">
-                    <span className="cmd-prefix">root@jasmine:~$</span> rearrange_image <span className="cursor-blink">_</span>
-                </div>
-            </footer>
+            {!alreadyCompleted && (
+                <main className="stage">
+                    <div className="board-frame">
+                        <div className="scanline" />
+                        <div
+                            className={`puzzle-board ${solved ? 'is-solved' : ''}`}
+                            style={{
+                                gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+                                aspectRatio: '1/1'
+                            }}
+                        >
+                            {!solved && tiles.map((tile, index) => {
+                                const isEmpty = tile === TOTAL_TILES - 1;
+                                const correctRow = Math.floor(tile / GRID_SIZE);
+                                const correctCol = tile % GRID_SIZE;
+
+                                const bgPosX = (correctCol / (GRID_SIZE - 1)) * 100;
+                                const bgPosY = (correctRow / (GRID_SIZE - 1)) * 100;
+
+                                return (
+                                    <motion.div
+                                        key={tile}
+                                        layout
+                                        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                                        className={`tile-node ${isEmpty ? 'node-empty' : 'node-active'}`}
+                                        onClick={() => handleTileClick(index)}
+                                        whileHover={!isEmpty ? { scale: 1.02, filter: 'brightness(1.2)' } : {}}
+                                        whileTap={!isEmpty ? { scale: 0.98 } : {}}
+                                        style={!isEmpty ? {
+                                            backgroundImage: `url(${PUZZLE_IMAGE})`,
+                                            backgroundSize: `${GRID_SIZE * 100}% ${GRID_SIZE * 100}%`,
+                                            backgroundPosition: `${bgPosX}% ${bgPosY}%`,
+                                        } : {}}
+                                    >
+                                        {!isEmpty && <div className="tile-edge" />}
+                                        {!isEmpty && <span className="tile-id">{tile + 1}</span>}
+                                    </motion.div>
+                                );
+                            })}
+                            {solved && (
+                                <motion.div
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    className="solved-image"
+                                    style={{ backgroundImage: `url(${PUZZLE_IMAGE})` }}
+                                />
+                            )}
+                        </div>
+                    </div>
+                </main>
+            )}
+
+            {!alreadyCompleted && (
+                <footer className="h-footer">
+                    <div className="instruction-text">
+                        <span className="cmd-prefix">root@jasmine:~$</span> rearrange_image <span className="cursor-blink">_</span>
+                    </div>
+                </footer>
+            )}
 
             {/* Premium Instructions Modal */}
             <AnimatePresence>
-                {showInstructions && (
+                {showInstructions && !alreadyCompleted && (
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="prime-overlay"
@@ -242,7 +266,7 @@ const Slider = () => {
             </AnimatePresence>
 
             <AnimatePresence>
-                {solved && (
+                {solved && !alreadyCompleted && (
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                         className="win-overlay"
@@ -263,7 +287,7 @@ const Slider = () => {
                                 </div>
                                 <div className="r-item">
                                     <span className="r-label">CLUE UNLOCKED</span>
-                                    <span className="r-data clue-highlight">"The next egg lies where developers speak to machines."</span>
+                                    <span className="r-data clue-highlight">"You may found me but wait for me to say that was good!! Find me on the container page, let's see you got some guts!!"</span>
                                 </div>
                             </div>
 
@@ -617,6 +641,59 @@ const Slider = () => {
                 }
 
                 .vault-btn:hover { background: var(--accent); color: #000; }
+
+                .already-completed-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(12, 13, 16, 0.95);
+                    backdrop-filter: blur(20px);
+                    z-index: 100;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+                .already-completed-box {
+                    max-width: 500px;
+                    width: 90%;
+                    background: #14161a;
+                    border: 1px solid var(--border);
+                    padding: 4rem 3rem;
+                    text-align: center;
+                }
+
+                .completed-icon {
+                    font-size: 4rem;
+                    margin-bottom: 1rem;
+                }
+
+                .already-completed-box h2 {
+                    font-weight: 900;
+                    letter-spacing: 2px;
+                    color: #fff;
+                    margin-bottom: 1rem;
+                }
+
+                .already-completed-box p {
+                    color: rgba(255,255,255,0.7);
+                    font-size: 1.1rem;
+                    margin-bottom: 2rem;
+                }
+
+                .return-btn {
+                    background: var(--accent);
+                    color: #000;
+                    border: none;
+                    padding: 1rem 3rem;
+                    font-weight: 700;
+                    letter-spacing: 2px;
+                    cursor: pointer;
+                    transition: 0.3s;
+                }
+
+                .return-btn:hover {
+                    background: #fff;
+                }
 
                 @media (max-width: 768px) {
                     .game-header { padding: 1rem; }

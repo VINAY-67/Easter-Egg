@@ -55,7 +55,7 @@ function App() {
         <Route path="/instructions" element={<ProtectedRoute><Instructions /></ProtectedRoute>} />
 
         <Route path="/game" element={<ProtectedRoute>{user?.Scores?.['Round-1'] > 0 || user?.HasWon ? <Navigate to="/level2" /> : <Game />}</ProtectedRoute>} />
-        <Route path="/level2" element={<ProtectedRoute>{user?.Scores?.['Round-2'] > 0 ? <Navigate to="/slider" /> : <Level2 />}</ProtectedRoute>} />
+        <Route path="/level2" element={<ProtectedRoute>{user?.Scores?.['Round-2'] > 0 ? <Navigate to="/instructions" /> : <Level2 />}</ProtectedRoute>} />
         <Route path="/slider" element={<ProtectedRoute>{user?.Scores?.['Round-3'] > 0 ? <Navigate to="/instructions" /> : <Slider />}</ProtectedRoute>} />
 
         <Route path="/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
