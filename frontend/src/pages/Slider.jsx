@@ -99,13 +99,14 @@ const Slider = () => {
 
         setIsSaving(true);
         try {
-            const response = await axios.post(`${API}/${user?._id}/updateuser`, {
-                scores: { ...user?.Scores, 'Round-3': 100 }
+            const response = await axios.put(`${API}/${user?.id}/updateuser`, {
+                round: 'Round-3',
+                action: 'complete'
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.success) {
-                updateUser({ Scores: { ...user?.Scores, 'Round-3': 100 } });
+                updateUser(response.data.user);
             }
         } catch (error) {
             console.error("Failed to save Level 3 score:", error);

@@ -9,6 +9,7 @@ import { API } from '../backend';
 
 const Game = () => {
     const { user, token, updateUser, logout } = useAuth();
+
     const navigate = useNavigate();
     const { board, revealCell, toggleFlag, initBoard, lossPending, winPending, setWinPending, setLossPending, ROWS, COLS } = useGame();
 
@@ -21,7 +22,7 @@ const Game = () => {
     useEffect(() => {
         if (!startApiCalled.current && user) {
             startApiCalled.current = true;
-            fetch(`${API}/${user._id}/updateuser`, {
+            fetch(`${API}/${user.id}/updateuser`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ round: 'Round-1', action: 'start' })
@@ -35,7 +36,7 @@ const Game = () => {
             setLossPending(false);
             const updateLife = async () => {
                 try {
-                    const res = await fetch(`${API}/${user._id}/updateuser`, {
+                    const res = await fetch(`${API}/${user.id}/updateuser`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                         body: JSON.stringify({ round: 'Round-1', action: 'lose-life' })
@@ -45,13 +46,8 @@ const Game = () => {
                     if (!res.ok) throw new Error(data.message || 'Error updating life');
 
                     if (data.user) {
-                        updateUser({
-                            ...user,
-                            numberofTries: data.user.numberofTries,
-                            isLocked: data.user.isLocked,
-                            Status: data.user.Status
-                        });
-                        setLives(3 - (data.user.numberofTries['Round-1'] || 0));
+                        updateUser(data.user);
+                        setLives(data.user.livesLeft);
 
                         if (data.user.isLocked) {
                             navigate('/locked');
@@ -75,9 +71,10 @@ const Game = () => {
     useEffect(() => {
         if (winPending) {
             setWinPending(false);
+
             const markWin = async () => {
                 try {
-                    const res = await fetch(`${API}/${user._id}/updateuser`, {
+                    const res = await fetch(`${API}/${user.id}/updateuser`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                         body: JSON.stringify({ round: 'Round-1', action: 'complete' })

@@ -28,14 +28,6 @@ const registerUser = async (req, res) => {
         res.status(201).json({
             message: 'Registered successfully',
             token: generateToken(user._id),
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                Status: user.Status,
-                numberofTries: user.numberofTries,
-                isLocked: user.isLocked,
-            },
         });
     } catch (err) {
         console.error('registerUser error:', err.message);
@@ -111,15 +103,20 @@ const updateUser = async (req, res) => {
                 user.Status = 'eliminated';
                 await user.save();
                 return res.status(200).json({
+                    success: true,
                     message: 'You are eliminated! You have exhausted all 3 lives for this round.',
                     isLocked: true,
                     livesLeft: 0,
                     user: {
                         id: user._id,
                         name: user.name,
+                        email: user.email,
                         Status: user.Status,
                         isLocked: user.isLocked,
                         numberofTries: user.numberofTries,
+                        HasPlayed: user.HasPlayed,
+                        Scores: user.Scores,
+                        HasWon: user.HasWon,
                         livesLeft: 0
                     }
                 });
@@ -144,10 +141,12 @@ const updateUser = async (req, res) => {
         await user.save();
 
         res.status(200).json({
+            success: true,
             message: 'User updated',
             user: {
                 id: user._id,
                 name: user.name,
+                email: user.email,
                 Status: user.Status,
                 HasPlayed: user.HasPlayed,
                 Scores: user.Scores,

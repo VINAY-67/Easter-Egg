@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { eventDetails, } from '../assets/data';
-import {API} from "../backend"
+import { API } from "../backend"
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { useMaze } from "../hooks/useMaze"
 import confetti from 'canvas-confetti';
 
-const CLUE = "The next egg lies where developers speak to machines.";
+const CLUE = "The next egg lies where developers speak to webs saying i know you !!.";
 
 const Level2 = () => {
     const navigate = useNavigate();
@@ -42,13 +43,14 @@ const Level2 = () => {
             // Update backend
             const updateScore = async () => {
                 try {
-                    const response = await axios.post(`${API}/${user?._id}/updateuser`, {
-                        scores: { ...user?.Scores, 'Round-2': 100 }
+                    const response = await axios.put(`${API}/${user?.id}/updateuser`, {
+                        round: 'Round-2',
+                        action: 'complete'
                     }, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     if (response.data.success) {
-                        updateUser({ Scores: { ...user?.Scores, 'Round-2': 100 } });
+                        updateUser(response.data.user);
                     }
                 } catch (error) {
                     console.error("Failed to save Level 2 score:", error);
