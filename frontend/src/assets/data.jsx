@@ -24,7 +24,7 @@ export const round2Rules = [
 export const round2Levels = {
     level1: {
         id: 1,
-        name: "Whispering Voice",
+        name: "Riddle-1",
         route: "/whispering-voice",
         riddle: "I speak without a mouth and hear without ears. I have no body but I come alive with wind. What am I?",
         clueOnCorrect: import.meta.env.VITE_RIDDLE1_CLUE || "5-3-8-15",
@@ -32,7 +32,7 @@ export const round2Levels = {
     },
     level2: {
         id: 2,
-        name: "Silent Key",
+        name: "Riddle-2",
         route: "/silent-key",
         riddle: "I have keys but no locks. I have space but no room. You can enter but you cannot go outside. What am I?",
         clueOnCorrect: import.meta.env.VITE_RIDDLE2_CLUE || "5-2-1-4",
@@ -40,7 +40,7 @@ export const round2Levels = {
     },
     final: {
         id: 3,
-        name: "Final Cipher",
+        name: "Final Riddle",
         route: "/final-cipher",
         puzzleString: import.meta.env.VITE_PUZZLE_STRING || "Q C R X E T S A Z C O D E P L M Y K R",
         hint: "Combine both clues to reveal the hidden word"
