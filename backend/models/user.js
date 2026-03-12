@@ -43,6 +43,19 @@ const userSchema = new mongoose.Schema(
             'Round-3': { type: Number, default: 0, max: 3 },
         },
         isLocked: { type: Boolean, default: false },
+        Round2Progress: {
+            level1Complete: { type: Boolean, default: false },
+            level2Complete: { type: Boolean, default: false },
+            finalComplete: { type: Boolean, default: false },
+            clue1: { type: String, default: '' },
+            clue2: { type: String, default: '' },
+            wrongAttempts: {
+                level1: { type: Number, default: 0 },
+                level2: { type: Number, default: 0 },
+                final: { type: Number, default: 0 }
+            },
+            completedAt: { type: Date, default: null }
+        },
     },
     { timestamps: true }
 );

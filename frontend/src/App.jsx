@@ -8,6 +8,10 @@ import Level2 from './pages/Level2';
 import Slider from './pages/Slider';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
+import RiddleIntro from './pages/RiddleIntro';
+import WhisperingVoice from './pages/WhisperingVoice';
+import SilentKey from './pages/SilentKey';
+import FinalCipher from './pages/FinalCipher';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -57,6 +61,31 @@ function App() {
         <Route path="/game" element={<ProtectedRoute>{user?.Scores?.['Round-1'] > 0 || user?.HasWon ? <Navigate to="/level2" /> : <Game />}</ProtectedRoute>} />
         <Route path="/level2" element={<ProtectedRoute>{user?.Scores?.['Round-2'] > 0 ? <Navigate to="/instructions" /> : <Level2 />}</ProtectedRoute>} />
         <Route path="/slider" element={<ProtectedRoute>{user?.Scores?.['Round-3'] > 0 ? <Navigate to="/instructions" /> : <Slider />}</ProtectedRoute>} />
+
+        {/* Round 2: Riddle Mania */}
+        <Route path="/riddle-intro" element={
+          <ProtectedRoute>
+            {user?.Scores?.['Round-3'] > 0 ? <RiddleIntro /> : <Navigate to="/slider" />}
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/whispering-voice" element={
+          <ProtectedRoute>
+            {user?.Scores?.['Round-3'] > 0 ? <WhisperingVoice /> : <Navigate to="/slider" />}
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/silent-key" element={
+          <ProtectedRoute>
+            {user?.Scores?.['Round-3'] > 0 ? <SilentKey /> : <Navigate to="/slider" />}
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/final-cipher" element={
+          <ProtectedRoute>
+            {user?.Scores?.['Round-3'] > 0 ? <FinalCipher /> : <Navigate to="/slider" />}
+          </ProtectedRoute>
+        } />
 
         <Route path="/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/locked" element={<LockedOut />} />

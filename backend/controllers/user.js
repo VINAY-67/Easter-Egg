@@ -68,6 +68,7 @@ const loginUser = async (req, res) => {
                 HasStarted: user.HasStarted,
                 numberofTries: user.numberofTries,
                 isLocked: user.isLocked,
+                Round2Progress: user.Round2Progress,
             },
         });
     } catch (err) {
@@ -80,14 +81,141 @@ const loginUser = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        const { round, action, amount = 1 } = req.body;
-        // action: 'lose-life' | 'complete' | 'start'
+        const { round, action, amount = 1, level, answer, clue } = req.body;
+        // action: 'lose-life' | 'complete' | 'start' | 'riddle-progress' | 'riddle-answer'
 
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        if (user.isLocked)
+        if (user.isLocked && action !== 'riddle-answer')
             return res.status(403).json({ message: 'You are eliminated! No more trials remain.' });
+
+        // Handle Riddle Round-2 Actions
+        if (round === 'Round-2') {
+            // Initialize Round2Progress if not exists
+            if (!user.Round2Progress) {
+                user.Round2Progress = {
+                    level1Complete: false,
+                    level2Complete: false,
+                    finalComplete: false,
+                    clue1: '',
+                    clue2: '',
+                    wrongAttempts: { level1: 0, level2: 0, final: 0 },
+                    completedAt: null
+                };
+            }
+
+            // Handle riddle answer validation
+            if (action === 'riddle-answer') {
+                const correctAnswers = {
+                    1: 'echo',
+                    2: 'keyboard',
+                    3: 'CRESCODE'
+                };
+
+                const normalizedAnswer = (answer || '').trim().toLowerCase();
+                const expectedAnswer = correctAnswers[level].toLowerCase();
+
+                if (normalizedAnswer === expectedAnswer) {
+                    // Correct answer
+                    const clueValue = level === 1 ? '5-3-8-15' : level === 2 ? '5-2-1-4' : null;
+                    
+                    if (level === 1) {
+                        user.Round2Progress.level1Complete = true;
+                        user.Round2Progress.clue1 = clueValue;
+                    } else if (level === 2) {
+                        user.Round2Progress.level2Complete = true;
+                        user.Round2Progress.clue2 = clueValue;
+                    }
+                    
+                    user.Round2Progress.wrongAttempts[`level${level}`] = 0;
+                    
+                    user.markModified('Round2Progress');
+                    await user.save();
+
+                    return res.status(200).json({
+                        success: true,
+                        isCorrect: true,
+                        clue: clueValue,
+                        message: 'Correct answer!'
+                    });
+                } else {
+                    // Wrong answer
+                    user.Round2Progress.wrongAttempts[`level${level}`] = 
+                        (user.Round2Progress.wrongAttempts[`level${level}`] || 0) + 1;
+                    
+                    user.markModified('Round2Progress');
+                    await user.save();
+
+                    return res.status(200).json({
+                        success: false,
+                        isCorrect: false,
+                        message: 'Incorrect answer',
+                        attemptsLeft: 3 - user.Round2Progress.wrongAttempts[`level${level}`]
+                    });
+                }
+            }
+
+            // Handle riddle progress update
+            if (action === 'riddle-progress') {
+                if (level === 1) {
+                    user.Round2Progress.level1Complete = true;
+                    if (clue) user.Round2Progress.clue1 = clue;
+                } else if (level === 2) {
+                    user.Round2Progress.level2Complete = true;
+                    if (clue) user.Round2Progress.clue2 = clue;
+                }
+
+                user.markModified('Round2Progress');
+                await user.save();
+
+                return res.status(200).json({
+                    success: true,
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        Status: user.Status,
+                        HasPlayed: user.HasPlayed,
+                        Scores: user.Scores,
+                        HasWon: user.HasWon,
+                        isLocked: user.isLocked,
+                        numberofTries: user.numberofTries,
+                        Round2Progress: user.Round2Progress
+                    }
+                });
+            }
+
+            // Handle Round-2 completion
+            if (action === 'complete') {
+                user.Round2Progress.finalComplete = true;
+                user.Round2Progress.completedAt = new Date();
+                user.Scores['Round-2'] = (user.Scores['Round-2'] || 0) + 1;
+                user.Status = 'won';
+                user.HasWon = true;
+
+                user.markModified('Round2Progress');
+                user.markModified('Scores');
+                await user.save();
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Round-2 completed!',
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        Status: user.Status,
+                        HasPlayed: user.HasPlayed,
+                        Scores: user.Scores,
+                        HasWon: user.HasWon,
+                        isLocked: user.isLocked,
+                        numberofTries: user.numberofTries,
+                        Round2Progress: user.Round2Progress
+                    }
+                });
+            }
+        }
 
         if (action === 'start') {
             user.HasStarted = true;

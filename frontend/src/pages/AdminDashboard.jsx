@@ -78,6 +78,7 @@ const AdminDashboard = () => {
                                     <th style={{ padding: '15px' }}>Level</th>
                                     <th style={{ padding: '15px' }}>Matches Played</th>
                                     <th style={{ padding: '15px' }}>Has Won</th>
+                                    <th style={{ padding: '15px' }}>Round-2</th>
                                     <th style={{ padding: '15px' }}>Locked Out</th>
                                 </tr>
                             </thead>
@@ -108,12 +109,23 @@ const AdminDashboard = () => {
                                             {u.numberofTries ? u.numberofTries["Round-1"] : 0}
                                         </td>
                                         <td style={{ padding: '15px' }}>{u.HasWon ? '✅' : '❌'}</td>
+                                        <td style={{ padding: '15px', fontSize: '0.75rem' }}>
+                                            {u.Round2Progress?.finalComplete ? (
+                                                <span style={{ color: 'var(--safe)' }}>✅ Complete</span>
+                                            ) : u.Round2Progress?.level2Complete ? (
+                                                <span style={{ color: '#fbbf24' }}>Level 2 ✅</span>
+                                            ) : u.Round2Progress?.level1Complete ? (
+                                                <span style={{ color: '#667eea' }}>Level 1 ✅</span>
+                                            ) : (
+                                                <span style={{ opacity: 0.5 }}>Not Started</span>
+                                            )}
+                                        </td>
                                         <td style={{ padding: '15px' }}>{u.isLocked ? <span style={{ color: 'var(--danger)' }}>Yes</span> : 'No'}</td>
                                     </motion.tr>
                                 ))}
                                 {users.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#a4b0be' }}>No players found.</td>
+                                        <td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#a4b0be' }}>No players found.</td>
                                     </tr>
                                 )}
                             </tbody>

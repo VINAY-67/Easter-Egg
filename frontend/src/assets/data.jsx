@@ -1,3 +1,55 @@
+export const round2Rules = [
+    {
+        id: 1,
+        text: "Solve the riddle to reveal a hidden clue"
+    },
+    {
+        id: 2,
+        text: "Use clues to decode the final mystery"
+    },
+    {
+        id: 3,
+        text: "You have maximum of 3 attempts per riddle"
+    },
+    {
+        id: 4,
+        text: "Wrong answers trigger temporary lockout"
+    },
+    {
+        id: 5,
+        text: "Find each level through your own investigation"
+    }
+];
+
+export const round2Levels = {
+    level1: {
+        id: 1,
+        name: "Whispering Voice",
+        route: "/whispering-voice",
+        riddle: "I speak without a mouth and hear without ears. I have no body but I come alive with wind. What am I?",
+        correctAnswer: "echo",
+        clueOnCorrect: "5-3-8-15",
+        clueDescription: "E-C-H-O (A1Z26 Cipher)"
+    },
+    level2: {
+        id: 2,
+        name: "Silent Key",
+        route: "/silent-key",
+        riddle: "I have keys but no locks. I have space but no room. You can enter but you cannot go outside. What am I?",
+        correctAnswer: "keyboard",
+        clueOnCorrect: "5-2-1-4",
+        clueDescription: "Every second letter: E-B-A-D (A1Z26)"
+    },
+    final: {
+        id: 3,
+        name: "Final Cipher",
+        route: "/final-cipher",
+        puzzleString: "Q C R X E T S A Z C O D E P L M Y K R",
+        correctAnswer: "CRESCODE",
+        hint: "Combine both clues to reveal the hidden word"
+    }
+};
+
 export const gameRules = [
     {
         id: 1,

@@ -85,10 +85,16 @@ const Instructions = () => {
                             <strong>Level 2:</strong>
                             {user?.Scores?.['Round-2'] > 0 ? <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span> : (user?.Scores?.['Round-1'] > 0 || user?.HasWon) ? <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Unlocked</span> : <span style={{ opacity: 0.5 }}>Locked</span>}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                             <strong>Level 3:</strong>
                             {user?.Scores?.['Round-3'] > 0 ? <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span> : <span style={{ opacity: 0.5 }}>Locked</span>}
                         </div>
+                        {user?.Scores?.['Round-3'] > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                <strong>Round 2:</strong>
+                                {user?.Round2Progress?.finalComplete ? <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span> : <span style={{ color: '#667eea', fontWeight: 'bold' }}>🔓 Available</span>}
+                            </div>
+                        )}
                     </motion.div>
                 </div>
 
