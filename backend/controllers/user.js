@@ -108,9 +108,9 @@ const updateUser = async (req, res) => {
             // Handle riddle answer validation
             if (action === 'riddle-answer') {
                 const correctAnswers = {
-                    1: 'echo',
-                    2: 'keyboard',
-                    3: 'CRESCODE'
+                    1: process.env.CLUE1,
+                    2: process.env.CLUE2,
+                    3: process.env.CLUE3    
                 };
 
                 const normalizedAnswer = (answer || '').trim().toLowerCase();
@@ -118,7 +118,7 @@ const updateUser = async (req, res) => {
 
                 if (normalizedAnswer === expectedAnswer) {
                     // Correct answer
-                    const clueValue = level === 1 ? '5-3-8-15' : level === 2 ? '5-2-1-4' : null;
+                    const clueValue = level === 1 ? process.env.RIDDLE_CLUE1 : level === 2 ? process.env.RIDDLE_CLUE2 : null;
                     
                     if (level === 1) {
                         user.Round2Progress.level1Complete = true;

@@ -229,8 +229,8 @@ const FinalCipher = () => {
                 lockoutTimeLeft={lockoutTimeLeft}
                 placeholder="Enter the decoded word..."
                 showSuccess={showSuccess}
-                clue={showSuccess ? levelData.correctAnswer : ""}
-                clueLabel="THE WORD"
+                clue={showSuccess ? "Congratulations! You've solved the Final Cipher!" : ""}
+                clueLabel={showSuccess ? "STATUS" : ""}
                 redirectCountdown={redirectCountdown}
                 levelName="FINAL CHALLENGE"
             />

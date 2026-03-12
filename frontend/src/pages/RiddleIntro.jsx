@@ -97,7 +97,7 @@ const RiddleIntro = () => {
                         </div>
                     </motion.div>
 
-                    {round2Progress?.clue1 && (
+                    {round2Progress?.clue1 && !round2Progress?.finalComplete && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -118,7 +118,7 @@ const RiddleIntro = () => {
                         </motion.div>
                     )}
 
-                    {round2Progress?.clue2 && (
+                    {round2Progress?.clue2 && !round2Progress?.finalComplete && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}

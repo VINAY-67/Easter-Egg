@@ -22,6 +22,9 @@ const ProtectedRoute = ({ children }) => {
     setIntendedPath(location.pathname);
     return <Navigate to="/" />;
   }
+  if (user === null) {
+    return null;
+  }
   if (user?.isLocked) return <Navigate to="/locked" />;
   return children;
 };
@@ -59,31 +62,31 @@ function App() {
         <Route path="/instructions" element={<ProtectedRoute><Instructions /></ProtectedRoute>} />
 
         <Route path="/game" element={<ProtectedRoute>{user?.Scores?.['Round-1'] > 0 || user?.HasWon ? <Navigate to="/level2" /> : <Game />}</ProtectedRoute>} />
-        <Route path="/level2" element={<ProtectedRoute>{user?.Scores?.['Round-2'] > 0 ? <Navigate to="/instructions" /> : <Level2 />}</ProtectedRoute>} />
-        <Route path="/slider" element={<ProtectedRoute>{user?.Scores?.['Round-3'] > 0 ? <Navigate to="/instructions" /> : <Slider />}</ProtectedRoute>} />
+        <Route path="/level2" element={<ProtectedRoute>{user?.Scores?.['Round-2'] > 0 ? <Navigate to="/riddle-intro" /> : <Level2 />}</ProtectedRoute>} />
+        <Route path="/slider" element={<ProtectedRoute>{user?.Scores?.['Round-3'] > 0 ? <Navigate to="/riddle-intro" /> : <Slider />}</ProtectedRoute>} />
 
         {/* Round 2: Riddle Mania */}
         <Route path="/riddle-intro" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 ? <RiddleIntro /> : <Navigate to="/slider" />}
+            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <RiddleIntro /> : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
         
         <Route path="/whispering-voice" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 ? <WhisperingVoice /> : <Navigate to="/slider" />}
+            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <WhisperingVoice /> : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
         
         <Route path="/silent-key" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 ? <SilentKey /> : <Navigate to="/slider" />}
+            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <SilentKey /> : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
         
         <Route path="/final-cipher" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 ? <FinalCipher /> : <Navigate to="/slider" />}
+            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <FinalCipher /> : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
 

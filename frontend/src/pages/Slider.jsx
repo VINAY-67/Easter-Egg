@@ -158,7 +158,7 @@ const Slider = () => {
                         <div className="completed-icon">🔒</div>
                         <h2>Level Already Completed</h2>
                         <p>You have already completed this level. Cannot play multiple times!</p>
-                        <button className="return-btn" onClick={() => navigate('/instructions')}>
+                        <button className="return-btn" onClick={() => navigate('/riddle-intro')}>
                             Return to Instructions
                         </button>
                     </div>
@@ -291,7 +291,7 @@ const Slider = () => {
                                 </div>
                             </div>
 
-                            <button className="vault-btn" onClick={() => navigate('/instructions')}>
+                            <button className="vault-btn" onClick={() => navigate('/riddle-intro')}>
                                 RETURN TO HUB
                             </button>
                         </motion.div>

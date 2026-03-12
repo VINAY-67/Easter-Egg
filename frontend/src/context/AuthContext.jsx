@@ -5,7 +5,10 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem('jasmineUser');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
     const [intendedPath, setIntendedPath] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('jasmineToken') || null);
 
