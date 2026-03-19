@@ -58,6 +58,12 @@ const userSchema = new mongoose.Schema(
             round2LockedAt: { type: Date, default: null },
             enteredFinalAt: { type: Date, default: null }
         },
+        Round3Progress: {
+            levelComplete: { type: Boolean, default: false },
+            wrongAttempts: { type: Number, default: 0 },
+            completedAt: { type: Date, default: null },
+            round3LockedAt: { type: Date, default: null }
+        },
     },
     { timestamps: true }
 );

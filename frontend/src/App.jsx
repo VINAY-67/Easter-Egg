@@ -12,6 +12,8 @@ import RiddleIntro from './pages/RiddleIntro';
 import WhisperingVoice from './pages/WhisperingVoice';
 import SilentKey from './pages/SilentKey';
 import FinalCipher from './pages/FinalCipher';
+import JasmineIntro from './pages/JasmineIntro';
+import JasmineRevelation from './pages/JasmineRevelation';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -99,6 +101,19 @@ function App() {
         <Route path="/final-cipher" element={
           <ProtectedRoute>
             {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <FinalCipher /> : <Navigate to="/instructions" />}
+          </ProtectedRoute>
+        } />
+
+        {/* Round 3: The Jasmine Revelation */}
+        <Route path="/jasmine-intro" element={
+          <ProtectedRoute>
+            {user?.Scores?.['Round-3'] > 0 || user?.Round2Progress?.finalComplete ? <JasmineIntro /> : <Navigate to="/final-cipher" />}
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/jasmine-revelation" element={
+          <ProtectedRoute>
+            {user?.Scores?.['Round-3'] > 0 || user?.Round2Progress?.finalComplete ? <JasmineRevelation /> : <Navigate to="/jasmine-intro" />}
           </ProtectedRoute>
         } />
 

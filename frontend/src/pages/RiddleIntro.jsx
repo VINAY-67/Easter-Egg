@@ -144,14 +144,28 @@ const RiddleIntro = () => {
                     <p style={{ color: '#718096', fontSize: '0.9rem', fontStyle: 'italic' }}>
                         The path reveals itself to those who seek...
                     </p>
+                    {round2Progress?.finalComplete && (
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(245, 175, 25, 0.5)" }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/jasmine-intro')}
+                            className="styled-button"
+                            style={{ 
+                                background: 'linear-gradient(45deg, #f5af19, #f12711)',
+                                marginBottom: '15px'
+                            }}
+                        >
+                            Enter The Jasmine Revelation
+                        </motion.button>
+                    )}
                     <motion.button
                         whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(102, 126, 234, 0.4)" }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/instructions')}
                         className="styled-button"
                         style={{ background: 'linear-gradient(45deg, #667eea, #764ba2)' }}
                     >
-                        Return
+                        Return to Hub
                     </motion.button>
                 </div>
             </motion.div>

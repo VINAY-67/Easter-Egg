@@ -69,6 +69,7 @@ const loginUser = async (req, res) => {
                 numberofTries: user.numberofTries,
                 isLocked: user.isLocked,
                 Round2Progress: user.Round2Progress,
+                Round3Progress: user.Round3Progress,
             },
         });
     } catch (err) {
@@ -260,6 +261,141 @@ const updateUser = async (req, res) => {
                         Round2Progress: user.Round2Progress
                     }
                 });
+            }
+        }
+
+        // Handle Round-3 Actions (The Jasmine Revelation)
+        if (round === 'Round-3') {
+            // =============================================
+            // COUNTDOWN: Round 3 unlocks at ROUND3_UNLOCK_DATE
+            // =============================================
+            const ROUND3_ENABLED = process.env.ROUND3_ENABLED === 'true';
+            const ROUND3_UNLOCK_DATE = process.env.ROUND3_UNLOCK_DATE;
+            
+            if (ROUND3_ENABLED && ROUND3_UNLOCK_DATE) {
+                const unlockTime = new Date(ROUND3_UNLOCK_DATE).getTime();
+                const now = Date.now();
+                
+                if (now < unlockTime) {
+                    const remainingMs = unlockTime - now;
+                    const remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+                    const remainingHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    
+                    return res.status(403).json({
+                        message: `Round 3 unlocks in ${remainingDays} days and ${remainingHours} hours.`,
+                        countdownActive: true,
+                        unlockDate: ROUND3_UNLOCK_DATE,
+                        remainingMs: remainingMs
+                    });
+                }
+            } else if (!ROUND3_ENABLED) {
+                return res.status(403).json({
+                    message: 'Round 3 is not yet available. Check back soon!',
+                    round3Enabled: false
+                });
+            }
+            // =============================================
+
+            // Initialize Round3Progress if not exists
+            if (!user.Round3Progress) {
+                user.Round3Progress = {
+                    levelComplete: false,
+                    wrongAttempts: 0,
+                    completedAt: null,
+                    round3LockedAt: null
+                };
+            }
+
+            // =============================================
+            // PRODUCTION: 6-hour lockout
+            // =============================================
+            const LOCKOUT_DURATION = 6 * 60 * 60 * 1000; // 6 hours
+            
+            if (user.Round3Progress.round3LockedAt) {
+                const lockoutTime = new Date(user.Round3Progress.round3LockedAt).getTime();
+                const now = Date.now();
+                const timePassed = now - lockoutTime;
+                
+                if (timePassed < LOCKOUT_DURATION) {
+                    const remainingMs = LOCKOUT_DURATION - timePassed;
+                    const remainingHours = Math.ceil(remainingMs / (1000 * 60 * 60));
+                    return res.status(403).json({ 
+                        message: `You are locked out. Try again in ${remainingHours} hours.`,
+                        isLocked: true,
+                        lockoutUntil: user.Round3Progress.round3LockedAt
+                    });
+                } else {
+                    // Lockout expired, reset
+                    user.Round3Progress.round3LockedAt = null;
+                    user.Round3Progress.wrongAttempts = 0;
+                }
+            }
+
+            // Handle Round-3 answer validation
+            if (action === 'jasmine-answer') {
+                const correctAnswer = process.env.JASMINE_ANSWER || 'JASMINE';
+
+                const normalizedAnswer = (answer || '').trim().toUpperCase();
+
+                if (normalizedAnswer === correctAnswer) {
+                    // Correct answer - Reveal the Jasmine!
+                    user.Round3Progress.levelComplete = true;
+                    user.Round3Progress.completedAt = new Date();
+                    user.Round3Progress.wrongAttempts = 0;
+                    user.Scores['Round-3'] = (user.Scores['Round-3'] || 0) + 1;
+                    user.Status = 'won';
+                    user.HasWon = true;
+
+                    user.markModified('Round3Progress');
+                    user.markModified('Scores');
+                    await user.save();
+
+                    return res.status(200).json({
+                        success: true,
+                        isCorrect: true,
+                        message: 'Congratulations! You have found the Jasmine!',
+                        reward: 'JASMINE_REVEALED',
+                        user: {
+                            id: user._id,
+                            name: user.name,
+                            email: user.email,
+                            Status: user.Status,
+                            HasWon: user.HasWon,
+                            Scores: user.Scores,
+                            Round2Progress: user.Round2Progress,
+                            Round3Progress: user.Round3Progress
+                        }
+                    });
+                } else {
+                    // Wrong answer
+                    user.Round3Progress.wrongAttempts = (user.Round3Progress.wrongAttempts || 0) + 1;
+                    const currentAttempts = user.Round3Progress.wrongAttempts;
+                    
+                    // Check if user has reached 3 failed attempts - apply 6 hour lockout
+                    if (currentAttempts >= 3) {
+                        user.Round3Progress.round3LockedAt = new Date();
+                        user.markModified('Round3Progress');
+                        await user.save();
+                        
+                        return res.status(403).json({
+                            success: false,
+                            isCorrect: false,
+                            isLocked: true,
+                            message: 'Too many failed attempts! You are locked out for 6 hours.',
+                            lockoutUntil: user.Round3Progress.round3LockedAt
+                        });
+                    }
+                    
+                    user.markModified('Round3Progress');
+                    await user.save();
+
+                    return res.status(200).json({
+                        success: false,
+                        isCorrect: false,
+                        message: 'Incorrect. Use your clues wisely.',
+                        attemptsLeft: 3 - currentAttempts
+                    });
+                }
             }
         }
 

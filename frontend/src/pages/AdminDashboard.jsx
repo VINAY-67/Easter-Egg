@@ -79,6 +79,7 @@ const AdminDashboard = () => {
                                     <th style={{ padding: '15px' }}>Matches Played</th>
                                     <th style={{ padding: '15px' }}>Has Won</th>
                                     <th style={{ padding: '15px' }}>Round-2</th>
+                                    <th style={{ padding: '15px' }}>Round-3</th>
                                     <th style={{ padding: '15px' }}>Locked Out</th>
                                 </tr>
                             </thead>
@@ -108,20 +109,25 @@ const AdminDashboard = () => {
                                         <td style={{ padding: '15px', textAlign: 'center' }}>
                                             {u.numberofTries ? u.numberofTries["Round-1"] : 0}
                                         </td>
-                                        <td style={{ padding: '15px' }}>{u.HasWon ? '✅' : '❌'}</td>
+                                        <td style={{ padding: '15px' }}>{u.HasWon ? '✅ WON!' : '❌'}</td>
                                         <td style={{ padding: '15px', fontSize: '0.75rem' }}>
-                                            {u.Round2Progress?.finalComplete ? (
-                                                <span style={{ color: 'var(--safe)' }}>✅ Complete</span>
-                                            ) : u.Round2Progress?.enteredFinalAt ? (
-                                                <span style={{ color: '#e74c3c' }}>Final 🔒</span>
-                                            ) : u.Round2Progress?.level2Complete ? (
-                                                <span style={{ color: '#fbbf24' }}>Level 2 ✅</span>
-                                            ) : u.Round2Progress?.level1Complete ? (
-                                                <span style={{ color: '#667eea' }}>Level 1 ✅</span>
-                                            ) : u.Scores?.['Round-3'] > 0 ? (
-                                                <span style={{ color: 'var(--safe)' }}>✅ Complete</span>
+                                            {u.Round3Progress?.levelComplete ? (
+                                                <span style={{ color: '#22c55e', fontWeight: 'bold' }}>🏆 WON!</span>
+                                            ) : u.Round2Progress?.finalComplete ? (
+                                                <span style={{ color: '#f5af19' }}>🔓 Eligible</span>
                                             ) : (
-                                                <span style={{ opacity: 0.5 }}>Not Started</span>
+                                                <span style={{ opacity: 0.5 }}>🔒 Not Eligible</span>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '15px', fontSize: '0.75rem' }}>
+                                            {u.Round3Progress?.levelComplete ? (
+                                                <span style={{ color: '#22c55e' }}>✅ Won</span>
+                                            ) : u.Round3Progress?.round3LockedAt ? (
+                                                <span style={{ color: '#e74c3c' }}>🔒 Locked</span>
+                                            ) : u.Round2Progress?.finalComplete ? (
+                                                <span style={{ color: '#f5af19' }}>🔓 Available</span>
+                                            ) : (
+                                                <span style={{ opacity: 0.5 }}>🔒 Locked</span>
                                             )}
                                         </td>
                                         <td style={{ padding: '15px' }}>{u.isLocked ? <span style={{ color: 'var(--danger)' }}>Yes</span> : 'No'}</td>

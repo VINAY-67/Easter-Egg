@@ -95,6 +95,12 @@ const Instructions = () => {
                                 {user?.Round2Progress?.finalComplete ? <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span> : <span style={{ color: '#667eea', fontWeight: 'bold' }}>🔓 Available</span>}
                             </div>
                         )}
+                        {user?.Round2Progress?.finalComplete && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                <strong>Round 3:</strong>
+                                {user?.Scores?.['Round-3'] > 0 ? <span style={{ color: 'var(--safe)', fontWeight: 'bold' }}>✅ Completed</span> : <span style={{ color: '#f5af19', fontWeight: 'bold' }}>🔓 Available</span>}
+                            </div>
+                        )}
                     </motion.div>
                 </div>
 
@@ -118,6 +124,17 @@ const Instructions = () => {
                             style={{ background: 'linear-gradient(45deg, #e17055, #fdcb6e)' }}
                         >
                             Start Round 1
+                        </motion.button>
+                    )}
+                    {user?.Round2Progress?.finalComplete && !user?.Scores?.['Round-3'] > 0 && (
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: "0px 0px 20px rgba(245, 175, 25, 0.5)" }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/jasmine-intro')}
+                            className="styled-button"
+                            style={{ background: 'linear-gradient(45deg, #f5af19, #f12711)' }}
+                        >
+                            Start Round 3
                         </motion.button>
                     )}
                 </div>

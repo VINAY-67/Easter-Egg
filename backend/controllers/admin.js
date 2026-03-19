@@ -83,6 +83,8 @@ const getUsersData = async (req, res) => {
                     totalTries,
                     Scores: user.Scores,
                     _score: score,
+                    Round2Progress: user.Round2Progress || {},
+                    Round3Progress: user.Round3Progress || {},
                 };
             })
             .sort((a, b) => b._score - a._score); // descending by rank score

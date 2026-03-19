@@ -46,7 +46,7 @@ const FinalCipher = () => {
             const timer = setTimeout(() => {
                 setRedirectCountdown(prev => {
                     if (prev <= 1) {
-                        navigate('/instructions');
+                        navigate('/jasmine-intro');
                         return 0;
                     }
                     return prev - 1;

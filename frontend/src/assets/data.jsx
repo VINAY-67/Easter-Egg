@@ -42,7 +42,7 @@ export const round2Levels = {
         id: 3,
         name: "Final Riddle",
         route: "/final-cipher",
-        puzzleString: import.meta.env.VITE_PUZZLE_STRING || "Q C R X E T S A Z C O D E P L M Y K R",
+        puzzleString: "Q C R X E T S A Z C O D E P L M Y K R",
         hint: "Combine both clues to reveal the hidden word"
     }
 };
@@ -101,6 +101,31 @@ export const roundData = [
         isActive: false
     }
 ];
+
+export const round3Rules = [
+    {
+        id: 1,
+        text: "Convert each  <strong style='color:#fff'>Clue </strong> into 4-bit binary "
+    },
+    {
+        id: 2,
+        text: "Find positions with <strong style='color:#f5af19'>\"1\"</strong>"
+    },
+    {
+        id: 3,
+        text: "Repeat for <strong style='color:#fff'>Clue 2</strong> and combine all "
+    },
+    {
+        id: 4,
+        text: "Click cells to reveal"
+    },
+];
+
+export const round3Data = {
+    name: "Aakari Ghattam",
+    route: "/jasmine-revelation",
+    description: "The final chapter - decode the hidden message using all collected clues"
+};
 
 export const eventDetails = {
     title: "Find the Jasmine",
