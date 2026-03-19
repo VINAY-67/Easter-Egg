@@ -101,8 +101,32 @@ const updateUser = async (req, res) => {
                     clue1: '',
                     clue2: '',
                     wrongAttempts: { level1: 0, level2: 0, final: 0 },
-                    completedAt: null
+                    completedAt: null,
+                    round2LockedAt: null,
+                    enteredFinalAt: null
                 };
+            }
+
+            // Check for existing 6-hour lockout
+            const LOCKOUT_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+            if (user.Round2Progress.round2LockedAt) {
+                const lockoutTime = new Date(user.Round2Progress.round2LockedAt).getTime();
+                const now = Date.now();
+                const timePassed = now - lockoutTime;
+                
+                if (timePassed < LOCKOUT_DURATION) {
+                    const remainingMs = LOCKOUT_DURATION - timePassed;
+                    const remainingHours = Math.ceil(remainingMs / (1000 * 60 * 60));
+                    return res.status(403).json({ 
+                        message: `You are locked out. Try again in ${remainingHours} hours.`,
+                        isLocked: true,
+                        lockoutUntil: user.Round2Progress.round2LockedAt
+                    });
+                } else {
+                    // Lockout expired, reset
+                    user.Round2Progress.round2LockedAt = null;
+                    user.Round2Progress.wrongAttempts = { level1: 0, level2: 0, final: 0 };
+                }
             }
 
             // Handle riddle answer validation
@@ -119,6 +143,11 @@ const updateUser = async (req, res) => {
                 if (normalizedAnswer === expectedAnswer) {
                     // Correct answer
                     const clueValue = level === 1 ? process.env.RIDDLE_CLUE1 : level === 2 ? process.env.RIDDLE_CLUE2 : null;
+                    
+                    // Track when user enters Final Cipher (level 3)
+                    if (level === 3 && !user.Round2Progress.enteredFinalAt) {
+                        user.Round2Progress.enteredFinalAt = new Date();
+                    }
                     
                     if (level === 1) {
                         user.Round2Progress.level1Complete = true;
@@ -144,6 +173,23 @@ const updateUser = async (req, res) => {
                     user.Round2Progress.wrongAttempts[`level${level}`] = 
                         (user.Round2Progress.wrongAttempts[`level${level}`] || 0) + 1;
                     
+                    const currentAttempts = user.Round2Progress.wrongAttempts[`level${level}`];
+                    
+                    // Check if user has reached 3 failed attempts - apply 6 hour lockout
+                    if (currentAttempts >= 3) {
+                        user.Round2Progress.round2LockedAt = new Date();
+                        user.markModified('Round2Progress');
+                        await user.save();
+                        
+                        return res.status(403).json({
+                            success: false,
+                            isCorrect: false,
+                            isLocked: true,
+                            message: 'Too many failed attempts! You are locked out for 6 hours.',
+                            lockoutUntil: user.Round2Progress.round2LockedAt
+                        });
+                    }
+                    
                     user.markModified('Round2Progress');
                     await user.save();
 
@@ -151,7 +197,7 @@ const updateUser = async (req, res) => {
                         success: false,
                         isCorrect: false,
                         message: 'Incorrect answer',
-                        attemptsLeft: 3 - user.Round2Progress.wrongAttempts[`level${level}`]
+                        attemptsLeft: 3 - currentAttempts
                     });
                 }
             }

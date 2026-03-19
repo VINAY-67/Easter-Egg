@@ -90,6 +90,11 @@ const RiddleInput = ({
     }
 
     if (isLocked) {
+        const isSixHourLockout = lockoutTimeLeft > 3600;
+        const displayTime = isSixHourLockout 
+            ? `${Math.ceil(lockoutTimeLeft / 3600)} hours`
+            : `${lockoutTimeLeft} seconds`;
+        
         return (
             <motion.div
                 initial={{ opacity: 0 }}
@@ -99,12 +104,12 @@ const RiddleInput = ({
                 <div className="lockout-icon">🔒</div>
                 <h2>Too many attempts!</h2>
                 <p className="lockout-message">
-                    You have exhausted all attempts. Try again in <span className="countdown">{lockoutTimeLeft}</span> seconds.
+                    You have exhausted all attempts. Try again in <span className="countdown">{displayTime}</span>.
                 </p>
                 <div className="lockout-progress">
                     <div 
                         className="lockout-bar" 
-                        style={{ width: `${(lockoutTimeLeft / 30) * 100}%` }}
+                        style={{ width: `${isSixHourLockout ? 100 : (lockoutTimeLeft / 30) * 100}%` }}
                     />
                 </div>
             </motion.div>

@@ -112,10 +112,14 @@ const AdminDashboard = () => {
                                         <td style={{ padding: '15px', fontSize: '0.75rem' }}>
                                             {u.Round2Progress?.finalComplete ? (
                                                 <span style={{ color: 'var(--safe)' }}>✅ Complete</span>
+                                            ) : u.Round2Progress?.enteredFinalAt ? (
+                                                <span style={{ color: '#e74c3c' }}>Final 🔒</span>
                                             ) : u.Round2Progress?.level2Complete ? (
                                                 <span style={{ color: '#fbbf24' }}>Level 2 ✅</span>
                                             ) : u.Round2Progress?.level1Complete ? (
                                                 <span style={{ color: '#667eea' }}>Level 1 ✅</span>
+                                            ) : u.Scores?.['Round-3'] > 0 ? (
+                                                <span style={{ color: 'var(--safe)' }}>✅ Complete</span>
                                             ) : (
                                                 <span style={{ opacity: 0.5 }}>Not Started</span>
                                             )}

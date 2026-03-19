@@ -26,6 +26,19 @@ const FinalCipher = () => {
         if (progress.finalComplete) {
             setShowSuccess(true);
         }
+        
+        // Check if user is locked from previous attempts
+        if (progress.round2LockedAt) {
+            const lockoutTime = new Date(progress.round2LockedAt).getTime();
+            const now = Date.now();
+            const sixHours = 6 * 60 * 60 * 1000;
+            const timePassed = now - lockoutTime;
+            
+            if (timePassed < sixHours) {
+                setIsLocked(true);
+                setLockoutTimeLeft(Math.ceil((sixHours - timePassed) / 1000));
+            }
+        }
     }, [user]);
 
     useEffect(() => {
@@ -85,12 +98,20 @@ const FinalCipher = () => {
             const data = await res.json();
 
             if (!res.ok || !data.isCorrect) {
+                if (data.isLocked) {
+                    setIsLocked(true);
+                    const lockoutTime = data.lockoutUntil ? new Date(data.lockoutUntil).getTime() : Date.now();
+                    const remainingMs = lockoutTime + (6 * 60 * 60 * 1000) - Date.now();
+                    setLockoutTimeLeft(Math.ceil(remainingMs / 1000));
+                    throw new Error(data.message || 'You are locked out for 6 hours.');
+                }
+                
                 const newAttempts = wrongAttempts + 1;
                 setWrongAttempts(newAttempts);
                 
                 if (newAttempts >= MAX_ATTEMPTS) {
                     setIsLocked(true);
-                    setLockoutTimeLeft(30);
+                    setLockoutTimeLeft(6 * 60 * 60);
                 }
                 
                 throw new Error(data.message || 'Incorrect. Combine your clues to find the answer.');

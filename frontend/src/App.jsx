@@ -74,13 +74,25 @@ function App() {
         
         <Route path="/whispering-voice" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <WhisperingVoice /> : <Navigate to="/instructions" />}
+            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? (
+              user?.Round2Progress?.enteredFinalAt || user?.Round2Progress?.finalComplete ? (
+                <Navigate to="/final-cipher" />
+              ) : (
+                <WhisperingVoice />
+              )
+            ) : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
         
         <Route path="/silent-key" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <SilentKey /> : <Navigate to="/instructions" />}
+            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? (
+              user?.Round2Progress?.enteredFinalAt || user?.Round2Progress?.finalComplete ? (
+                <Navigate to="/final-cipher" />
+              ) : (
+                <SilentKey />
+              )
+            ) : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
         

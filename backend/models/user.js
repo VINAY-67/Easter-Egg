@@ -54,7 +54,9 @@ const userSchema = new mongoose.Schema(
                 level2: { type: Number, default: 0 },
                 final: { type: Number, default: 0 }
             },
-            completedAt: { type: Date, default: null }
+            completedAt: { type: Date, default: null },
+            round2LockedAt: { type: Date, default: null },
+            enteredFinalAt: { type: Date, default: null }
         },
     },
     { timestamps: true }
