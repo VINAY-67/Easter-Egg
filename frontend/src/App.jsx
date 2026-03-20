@@ -50,8 +50,8 @@ function App() {
   const { token, user } = useAuth();
 
   const getTargetRoute = () => {
-    if (user?.Scores?.['Round-2'] > 0) return '/slider';
-    if (user?.Scores?.['Round-1'] > 0 || user?.HasWon) return '/level2';
+    if (user?.Scores?.['Round-1'] === 2) return '/riddle-intro';
+    if (user?.Scores?.['Round-1'] === 1) return '/level2';
     return '/game';
   };
 
@@ -64,19 +64,19 @@ function App() {
         <Route path="/instructions" element={<ProtectedRoute><Instructions /></ProtectedRoute>} />
 
         <Route path="/game" element={<ProtectedRoute>{user?.Scores?.['Round-1'] > 0 || user?.HasWon ? <Navigate to="/level2" /> : <Game />}</ProtectedRoute>} />
-        <Route path="/level2" element={<ProtectedRoute>{user?.Scores?.['Round-2'] > 0 ? <Navigate to="/riddle-intro" /> : <Level2 />}</ProtectedRoute>} />
-        <Route path="/slider" element={<ProtectedRoute>{user?.Scores?.['Round-3'] > 0 ? <Navigate to="/riddle-intro" /> : <Slider />}</ProtectedRoute>} />
+        <Route path="/level2" element={<ProtectedRoute>{user?.Scores?.['Round-1'] > 0 || user?.HasWon ? <Level2 /> : <Navigate to="/game" />}</ProtectedRoute>} />
+        <Route path="/slider" element={<ProtectedRoute>{user?.Scores?.['Round-1'] === 2 ? <Navigate to="/instructions" /> : (user?.Scores?.['Round-1'] === 1 ? <Slider /> : <Navigate to="/game" />)}</ProtectedRoute>} />
 
         {/* Round 2: Riddle Mania */}
         <Route path="/riddle-intro" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <RiddleIntro /> : <Navigate to="/instructions" />}
+            {user?.Scores?.['Round-1'] === 2 ? <RiddleIntro /> : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
         
         <Route path="/whispering-voice" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? (
+            {user?.Scores?.['Round-1'] === 2 ? (
               user?.Round2Progress?.enteredFinalAt || user?.Round2Progress?.finalComplete ? (
                 <Navigate to="/final-cipher" />
               ) : (
@@ -88,7 +88,7 @@ function App() {
         
         <Route path="/silent-key" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? (
+            {user?.Scores?.['Round-1'] === 2 ? (
               user?.Round2Progress?.enteredFinalAt || user?.Round2Progress?.finalComplete ? (
                 <Navigate to="/final-cipher" />
               ) : (
@@ -100,20 +100,28 @@ function App() {
         
         <Route path="/final-cipher" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.HasWon ? <FinalCipher /> : <Navigate to="/instructions" />}
+            {user?.Scores?.['Round-1'] === 2 ? <FinalCipher /> : <Navigate to="/instructions" />}
           </ProtectedRoute>
         } />
 
         {/* Round 3: The Jasmine Revelation */}
         <Route path="/jasmine-intro" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.Round2Progress?.finalComplete ? <JasmineIntro /> : <Navigate to="/final-cipher" />}
+            {user?.Scores?.['Round-2'] === 1 || user?.Round2Progress?.finalComplete === true ? (
+              <JasmineIntro />
+            ) : (
+              <Navigate to="/instructions" />
+            )}
           </ProtectedRoute>
         } />
         
         <Route path="/jasmine-revelation" element={
           <ProtectedRoute>
-            {user?.Scores?.['Round-3'] > 0 || user?.Round2Progress?.finalComplete ? <JasmineRevelation /> : <Navigate to="/jasmine-intro" />}
+            {user?.Scores?.['Round-2'] === 1 || user?.Round2Progress?.finalComplete === true ? (
+              <JasmineRevelation />
+            ) : (
+              <Navigate to="/instructions" />
+            )}
           </ProtectedRoute>
         } />
 

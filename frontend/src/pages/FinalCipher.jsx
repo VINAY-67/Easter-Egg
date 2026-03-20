@@ -144,6 +144,9 @@ const FinalCipher = () => {
 
             if (completeData.user) {
                 updateUser(completeData.user);
+            } else if (data.user) {
+                // Use the user data from riddle-answer response if complete call doesn't return it
+                updateUser(data.user);
             }
         } catch (err) {
             console.error('Answer validation error:', err);

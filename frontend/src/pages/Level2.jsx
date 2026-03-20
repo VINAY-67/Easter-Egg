@@ -40,23 +40,15 @@ const Level2 = () => {
             setIsRunning(false);
             setScoreSaved(true);
 
-            // Update backend
-            const updateScore = async () => {
-                try {
-                    const response = await axios.put(`${API}/${user?.id}/updateuser`, {
-                        round: 'Round-2',
-                        action: 'complete'
-                    }, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (response.data.success) {
-                        updateUser(response.data.user);
-                    }
-                } catch (error) {
-                    console.error("Failed to save Level 2 score:", error);
-                }
-            };
-            updateScore();
+            // Save maze completion to backend
+            fetch(`${API}/${user?.id}/updateuser`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ round: 'Round-1', action: 'maze-complete' })
+            })
+                .then(r => r.json())
+                .then(data => { if (data.user) updateUser(data.user); })
+                .catch(err => console.error('Failed to save maze completion:', err));
 
             // Trigger celebration
             const duration = 3 * 1000;

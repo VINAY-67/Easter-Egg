@@ -21,7 +21,7 @@ const Slider = () => {
     const [timer, setTimer] = useState(0);
     const [showInstructions, setShowInstructions] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [alreadyCompleted, setAlreadyCompleted] = useState(user?.Scores?.['Round-3'] > 0);
+    const [alreadyCompleted, setAlreadyCompleted] = useState(user?.Scores?.['Round-1'] === 2);
 
     useEffect(() => {
         if (!alreadyCompleted) {
@@ -103,8 +103,8 @@ const Slider = () => {
         setIsSaving(true);
         try {
             const response = await axios.put(`${API}/${user?.id}/updateuser`, {
-                round: 'Round-3',
-                action: 'complete'
+                round: 'Round-1',
+                action: 'slider-complete'
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -158,7 +158,7 @@ const Slider = () => {
                         <div className="completed-icon">🔒</div>
                         <h2>Level Already Completed</h2>
                         <p>You have already completed this level. Cannot play multiple times!</p>
-                        <button className="return-btn" onClick={() => navigate('/riddle-intro')}>
+                        <button className="return-btn" onClick={() => navigate('/instructions')}>
                             Return to Instructions
                         </button>
                     </div>

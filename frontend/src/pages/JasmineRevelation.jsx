@@ -11,44 +11,55 @@ const GRID_COLS = 4;
 const MAX_REVEAL = 9;
 
 // =============================================
-// PRODUCTION: 6-hour lockout
+// TESTING: 30 seconds | PRODUCTION: 2 hours
 // =============================================
-const LOCKOUT_DURATION = 6 * 60 * 60 * 1000; // 6 hours
+const LOCKOUT_DURATION = 2*60*60 * 1000; // 30 seconds (testing) | 2 * 60 * 60 * 1000 (production - 2 hours)
 
 const JasmineRevelation = () => {
     const navigate = useNavigate();
     const { user, token, updateUser } = useAuth();
-    
+
     const [selectedCells, setSelectedCells] = useState([]);
     const [allLetters, setAllLetters] = useState([]);
-    const [wrongAttempts, setWrongAttempts] = useState(0);
+    const [wrongAttempts, setWrongAttempts] = useState(() => user?.Round3Progress?.wrongAttempts || 0);
     const [isLocked, setIsLocked] = useState(false);
     const [lockoutTimeLeft, setLockoutTimeLeft] = useState(0);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [answer, setAnswer] = useState('');
-    
+
     // =============================================
-    // COUNTDOWN: Enabled for Round 3 unlock
+    // COUNTDOWN: Round 3 unlocks at UNLOCK_DATE
     // =============================================
     const [showCountdown, setShowCountdown] = useState(false);
     const [countdownTime, setCountdownTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-    
+
     const MAX_ATTEMPTS = 3;
-    
+
     const userProgress = user?.Round3Progress || {};
     const userRiddleProgress = user?.Round2Progress || {};
-    
+
     const ROUND3_ENABLED = import.meta.env.VITE_ROUND3_ENABLED === 'true';
     // =============================================
-    // COUNTDOWN: Round 3 unlocks at this date
+    // PRODUCTION: '2026-03-21T12:30:00.000Z'  → 18:00 IST 21 Mar 2026
     // =============================================
-    const UNLOCK_DATE = import.meta.env.VITE_ROUND3_UNLOCK_DATE;
+    const UNLOCK_DATE = import.meta.env.VITE_ROUND3_UNLOCK_DATE || '2026-03-21T12:30:00.000Z';
     const LETTER_POOL = import.meta.env.VITE_ROUND3_LETTERS;
     const REAL_LETTERS = import.meta.env.VITE_ROUND3_LETTERS; // 9 letters - all must be in grid
     const DUMMY_LETTERS = 'XXXXXXX'; // 7 dummy letters
     const ALL_LETTERS = REAL_LETTERS + DUMMY_LETTERS; // 16 total
+
+    // Helper functions
+    const getAttemptsLeft = () => {
+        return Math.max(0, MAX_ATTEMPTS - wrongAttempts);
+    };
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    };
 
     // Fisher-Yates shuffle
     const shuffleArray = (array) => {
@@ -71,11 +82,11 @@ const JasmineRevelation = () => {
     // =============================================
     useEffect(() => {
         if (!UNLOCK_DATE) return;
-        
+
         const checkCountdown = () => {
             const unlockTime = new Date(UNLOCK_DATE).getTime();
             const now = Date.now();
-            
+
             if (now < unlockTime) {
                 setShowCountdown(true);
                 const remaining = unlockTime - now;
@@ -89,7 +100,7 @@ const JasmineRevelation = () => {
                 setShowCountdown(false);
             }
         };
-        
+
         checkCountdown();
         const interval = setInterval(checkCountdown, 1000);
         return () => clearInterval(interval);
@@ -97,17 +108,30 @@ const JasmineRevelation = () => {
 
     useEffect(() => {
         if (!ROUND3_ENABLED) return;
-        
+
         const progress = user?.Round3Progress || {};
         if (progress.round3LockedAt) {
             const lockoutTime = new Date(progress.round3LockedAt).getTime();
             const now = Date.now();
             const timePassed = now - lockoutTime;
-            
+
             if (timePassed < LOCKOUT_DURATION) {
+                // Lockout still active — restore timer
                 setIsLocked(true);
                 setLockoutTimeLeft(Math.ceil((LOCKOUT_DURATION - timePassed) / 1000));
+            } else {
+                // Lockout has expired — make sure we're unlocked
+                setIsLocked(false);
+                setLockoutTimeLeft(0);
             }
+        } else {
+            // No lockout record at all
+            setIsLocked(false);
+        }
+
+        // Sync wrongAttempts display from user context (covers page reload + updateUser calls)
+        if (progress.wrongAttempts !== undefined) {
+            setWrongAttempts(progress.wrongAttempts);
         }
     }, [user]);
 
@@ -135,7 +159,7 @@ const JasmineRevelation = () => {
 
     const handleCellClick = (index) => {
         if (isSubmitting) return;
-        
+
         if (selectedCells.includes(index)) {
             setSelectedCells(selectedCells.filter(i => i !== index));
         } else {
@@ -150,7 +174,7 @@ const JasmineRevelation = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!answer.trim()) {
             setError('Please enter your answer');
             return;
@@ -175,50 +199,54 @@ const JasmineRevelation = () => {
 
             const data = await res.json();
 
+            // Always sync user from backend if provided — keeps auth context / localStorage fresh
+            // This is what makes wrongAttempts count and lockout persist across page reloads
+            if (data.user) {
+                updateUser(data.user);
+            }
+
+            // Sync wrongAttempts display from backend (source of truth)
+            if (data.wrongAttempts !== undefined) {
+                setWrongAttempts(data.wrongAttempts);
+            }
+
+            // Handle countdown response
+            if (data.countdownActive) {
+                setShowCountdown(true);
+                setError(data.message || 'Round 3 is not available yet.');
+                setAnswer('');
+                setIsSubmitting(false);
+                return;
+            }
+
             if (!res.ok || !data.isCorrect) {
                 if (data.isLocked) {
                     setIsLocked(true);
-                    setLockoutTimeLeft(Math.ceil(LOCKOUT_DURATION / 1000));
-                    setError(data.message || 'You are locked out for 6 hours.');
-                } else {
-                    const newAttempts = wrongAttempts + 1;
-                    setWrongAttempts(newAttempts);
-                    setError(data.message || 'Incorrect answer. Try again.');
-                    
-                    if (newAttempts >= MAX_ATTEMPTS) {
-                        setIsLocked(true);
+                    // Compute remaining time from the actual lockoutUntil timestamp
+                    // (not a flat LOCKOUT_DURATION) so timer is accurate on reload / 4th attempt
+                    if (data.lockoutUntil) {
+                        const remainingMs = LOCKOUT_DURATION - (Date.now() - new Date(data.lockoutUntil).getTime());
+                        setLockoutTimeLeft(Math.max(1, Math.ceil(remainingMs / 1000)));
+                    } else {
                         setLockoutTimeLeft(Math.ceil(LOCKOUT_DURATION / 1000));
                     }
+                    setError(data.message || 'You are locked out.');
+                } else {
+                    setError(data.message || 'Incorrect answer. Try again.');
                 }
                 setAnswer('');
             } else {
                 confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
                 setTimeout(() => confetti({ particleCount: 150, spread: 120, origin: { y: 0.8 } }), 300);
                 setShowSuccess(true);
-                
-                if (data.user) {
-                    updateUser(data.user);
-                }
             }
         } catch (err) {
             console.error('Answer validation error:', err);
             setError('Something went wrong. Please try again.');
         }
-        
+
         setIsSubmitting(false);
     };
-
-    const formatTime = (seconds) => {
-        const hours = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        if (hours > 0) {
-            return `${hours}h ${mins}m`;
-        }
-        return `${mins}m ${secs}s`;
-    };
-
-    const getAttemptsLeft = () => Math.max(0, MAX_ATTEMPTS - wrongAttempts);
 
     // =============================================
     // COUNTDOWN: Show countdown if Round 3 not yet unlocked
@@ -338,8 +366,8 @@ const JasmineRevelation = () => {
                     <p style={{ fontSize: '1.2rem', color: '#a0aec0', marginBottom: '2rem' }}>
                         You have exhausted all your attempts.
                     </p>
-                    <div style={{ 
-                        background: 'rgba(239, 68, 68, 0.1)', 
+                    <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
                         border: '2px solid rgba(239, 68, 68, 0.3)',
                         borderRadius: '16px',
                         padding: '25px 50px',
@@ -355,80 +383,344 @@ const JasmineRevelation = () => {
     }
 
     if (showSuccess) {
+        const creditsData = [
+            { type: 'title', text: 'You Found The Easter Egg!' },
+            { type: 'separator' },
+            { type: 'header', text: 'THE END' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'header', text: 'JNTU-GV PRESENTS' },
+            { type: 'title-small', text: 'An Easter Egg Hunt Event' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'header', text: 'THE CRESCENCE STORY' },
+            { type: 'text', text: 'This Event is designed Exclusively for telling the importance of Cresence Technical Fest.' },
+            { type: 'text', text: 'For some of us it was just a timeout period to deal with our works and responsibilities.' },
+            { type: 'text', text: 'Yet we are losing the soul and the purpose of the Cresence Technical Fest.' },
+            { type: 'separator' },
+            { type: 'text', text: 'It started as a learning program, yet we have taken it from the entire beginning to an absolute learning platform filled with enjoyment and learning.' },
+            { type: 'separator' },
+            { type: 'quote', text: 'Yet the Legacy of Cresence will last long until the end of JNTU-GV.' },
+            { type: 'text', text: 'Do not hold back for making this technical fest a grand success.' },
+            { type: 'text', text: 'If we are here or not.' },
+            { type: 'separator' },
+            { type: 'emphasis', text: 'One Legacy, One Thought, One Purpose, One Responsibility.' },
+            { type: 'text', text: 'Make this happen!!' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'header', text: 'THE WORD' },
+            { type: 'text', text: "The word you entered was the actual word!!" },
+            { type: 'text', text: "It's not Cresence." },
+            { type: 'text', text: 'The word starts as Cre-(creative)-sense(sensation) = Cresense.' },
+            { type: 'text', text: 'Yet during these years it was changing from Create Sence to Moon Meaning!!' },
+            { type: 'text', text: "Then don't think it was Cresence." },
+            { type: 'separator' },
+            { type: 'header', text: 'THE MEANING' },
+            { type: 'emphasis-large', text: 'CRESCENCE' },
+            { type: 'text', text: 'Taken from a Latin word Crescere meaning' },
+            { type: 'emphasis', text: 'GROWTH AND DEVELOPMENT' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'thanks', text: 'Thank you for playing!' },
+            { type: 'text', text: 'Hope you have enjoyed this Event 😁🙂🥲' },
+            { type: 'separator' },
+            { type: 'text', text: "See Ya'll Next time" },
+            { type: 'text', text: 'Happy Journey For the Crescence' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'header', text: 'DEVELOPED WITH LOVE' },
+            { type: 'title-small', text: 'For Crescence 2K26' },
+            { type: 'text', text: 'Thank you all, let this legacy continue 😘💖💞' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'header', text: 'SIGNING OFF' },
+            { type: 'developer', text: 'Vinay 🫡🫡' },
+            { type: 'text', text: '3rd B.Tech CSE' },
+            { type: 'text', text: 'On occasion of Crescence 2K26' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'text', text: 'Special thanks to Charan Sir' },
+            { type: 'text', text: 'For making me Educating this event!!' },
+            { type: 'separator' },
+            { type: 'spacer' },
+            { type: 'spacer' },
+            { type: 'final', text: '🎋' },
+            { type: 'final', text: 'THE LEGACY CONTINUES' },
+            { type: 'spacer' },
+            { type: 'spacer' },
+        ];
+
         return (
             <div style={{
                 width: '100vw',
                 height: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%)',
+                overflow: 'hidden',
+                background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #0c0c0c 100%)',
                 color: '#fff',
-                padding: '2rem',
-                boxSizing: 'border-box'
+                position: 'relative'
             }}>
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    style={{ textAlign: 'center', maxWidth: '700px', width: '100%' }}
-                >
-   
-                    
-                    <h1 style={{ 
-                        fontSize: '3rem', 
-                        background: 'linear-gradient(90deg, #f5af19, #f12711)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        marginBottom: '1.5rem'
-                    }}>
-                        You Found The Jasmine!
-                    </h1>
-                    
-                    <div style={{
-                        background: 'rgba(34, 197, 94, 0.1)',
-                        border: '2px solid rgba(34, 197, 94, 0.3)',
-                        borderRadius: '20px',
-                        padding: '3rem',
-                        marginTop: '2rem'
-                    }}>
-                        <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🏆</div>
-                        <h2 style={{ color: '#22c55e', marginBottom: '1rem', fontSize: '1.5rem' }}>
-                            Congratulations!
-                        </h2>
-                        <p style={{ color: '#a0aec0', fontSize: '1.2rem', lineHeight: '1.8' }}>
-                            You have successfully completed the Easter Egg Hunt!<br/>
-                            Your journey through the Jasmine Trail has come to an end.<br/>
-                            <strong style={{ color: '#f5af19', fontSize: '1.3rem' }}>Thank you for playing!</strong>
-                        </p>
-                    </div>
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.8) 100%)',
+                    pointerEvents: 'none',
+                    zIndex: 1
+                }} />
 
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/instructions')}
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '30vh',
+                    background: 'linear-gradient(to bottom, #0c0c0c 0%, transparent 100%)',
+                    pointerEvents: 'none',
+                    zIndex: 2
+                }} />
+
+                <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '30vh',
+                    background: 'linear-gradient(to top, #0c0c0c 0%, transparent 100%)',
+                    pointerEvents: 'none',
+                    zIndex: 2
+                }} />
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        zIndex: 3
+                    }}
+                >
+                </motion.div>
+
+                <div style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    paddingTop: '60vh',
+                    zIndex: 0
+                }}>
+                    <motion.div
+                        initial={{ y: 0 }}
+                        animate={{ y: '-700vh' }}
+                        transition={{
+                            duration: 120, // Adjust this value to change speed (lower = faster)
+                            ease: 'linear',
+                            delay: 1
+                        }}
                         style={{
-                            marginTop: '2rem',
-                            padding: '1.2rem 3rem',
-                            background: 'linear-gradient(45deg, #22c55e, #16a34a)',
-                            border: 'none',
-                            borderRadius: '12px',
-                            color: '#fff',
-                            fontWeight: 'bold',
-                            fontSize: '1.1rem',
-                            cursor: 'pointer',
-                            letterSpacing: '2px'
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '1.5rem',
+                            paddingBottom: '80vh'
                         }}
                     >
-                        Return to Hub
-                    </motion.button>
-                </motion.div>
+                        {creditsData.map((item, index) => {
+                            if (item.type === 'separator') {
+                                return (
+                                    <div key={index} style={{
+                                        width: '60px',
+                                        height: '2px',
+                                        background: 'linear-gradient(90deg, transparent, #f5af19, transparent)',
+                                        margin: '1rem 0'
+                                    }} />
+                                );
+                            }
+                            if (item.type === 'spacer') {
+                                return <div key={index} style={{ height: '4rem' }} />;
+                            }
+                            if (item.type === 'title') {
+                                return (
+                                    <h1 key={index} style={{
+                                        fontSize: '4rem',
+                                        background: 'linear-gradient(90deg, #f5af19, #f12711)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        margin: '2rem 0',
+                                        textAlign: 'center'
+                                    }}>
+                                        {item.text}
+                                    </h1>
+                                );
+                            }
+                            if (item.type === 'header') {
+                                return (
+                                    <h2 key={index} style={{
+                                        fontSize: '2rem',
+                                        color: '#f5af19',
+                                        letterSpacing: '8px',
+                                        textTransform: 'uppercase',
+                                        textAlign: 'center'
+                                    }}>
+                                        {item.text}
+                                    </h2>
+                                );
+                            }
+                            if (item.type === 'title-small') {
+                                return (
+                                    <h3 key={index} style={{
+                                        fontSize: '1.5rem',
+                                        color: '#a0aec0',
+                                        textAlign: 'center'
+                                    }}>
+                                        {item.text}
+                                    </h3>
+                                );
+                            }
+                            if (item.type === 'quote') {
+                                return (
+                                    <p key={index} style={{
+                                        fontSize: '1.4rem',
+                                        color: '#fbbf24',
+                                        fontStyle: 'italic',
+                                        textAlign: 'center',
+                                        maxWidth: '600px',
+                                        lineHeight: '1.8'
+                                    }}>
+                                        "{item.text}"
+                                    </p>
+                                );
+                            }
+                            if (item.type === 'emphasis') {
+                                return (
+                                    <p key={index} style={{
+                                        fontSize: '1.6rem',
+                                        color: '#22c55e',
+                                        fontWeight: 'bold',
+                                        textAlign: 'center',
+                                        letterSpacing: '2px'
+                                    }}>
+                                        {item.text}
+                                    </p>
+                                );
+                            }
+                            if (item.type === 'emphasis-large') {
+                                return (
+                                    <h2 key={index} style={{
+                                        fontSize: '4rem',
+                                        background: 'linear-gradient(90deg, #f5af19, #f12711)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        fontWeight: 'bold',
+                                        letterSpacing: '8px',
+                                        margin: '1rem 0'
+                                    }}>
+                                        {item.text}
+                                    </h2>
+                                );
+                            }
+                            if (item.type === 'thanks') {
+                                return (
+                                    <h2 key={index} style={{
+                                        fontSize: '2.5rem',
+                                        color: '#22c55e',
+                                        textAlign: 'center',
+                                        marginTop: '2rem'
+                                    }}>
+                                        {item.text}
+                                    </h2>
+                                );
+                            }
+                            if (item.type === 'developer') {
+                                return (
+                                    <h3 key={index} style={{
+                                        fontSize: '2rem',
+                                        color: '#fbbf24',
+                                        textAlign: 'center'
+                                    }}>
+                                        {item.text}
+                                    </h3>
+                                );
+                            }
+                            if (item.type === 'final') {
+                                return (
+                                    <h1 key={index} style={{
+                                        fontSize: index === creditsData.length - 1 ? '3rem' : '4rem',
+                                        color: index === creditsData.length - 1 ? '#22c55e' : '#f5af19',
+                                        letterSpacing: '4px',
+                                        textAlign: 'center',
+                                        margin: '1rem 0'
+                                    }}>
+                                        {item.text}
+                                    </h1>
+                                );
+                            }
+                            return (
+                                <p key={index} style={{
+                                    fontSize: '1.1rem',
+                                    color: '#94a3b8',
+                                    textAlign: 'center',
+                                    maxWidth: '700px',
+                                    lineHeight: '1.8'
+                                }}>
+                                    {item.text}
+                                </p>
+                            );
+                        })}
+                    </motion.div>
+                </div>
+
+                <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 124 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate('/instructions')}
+                    style={{
+                        position: 'absolute',
+                        bottom: '5vh',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        padding: '1.2rem 3rem',
+                        background: 'linear-gradient(45deg, #22c55e, #16a34a)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        cursor: 'pointer',
+                        letterSpacing: '2px',
+                        zIndex: 10,
+                        boxShadow: '0 0 30px rgba(34, 197, 94, 0.4)'
+                    }}
+                >
+                    Return to Hub
+                </motion.button>
+
+                <style>{`
+                    @keyframes shimmer {
+                        0% { background-position: -200% center; }
+                        100% { background-position: 200% center; }
+                    }
+                    @keyframes pulse {
+                        0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+                        50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                    }
+                `}</style>
             </div>
         );
     }
 
     return (
-        <div style={{ 
+        <div style={{
             width: '100vw',
             minHeight: '100vh',
             background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%)',
@@ -468,16 +760,16 @@ const JasmineRevelation = () => {
                     <h3 style={{ color: '#667eea', marginBottom: '1.5rem', textAlign: 'center', fontSize: '1.3rem' }}>
                         📖 How to Play
                     </h3>
-                    <ol style={{ color: '#a0aec0', fontSize: '1rem', lineHeight: '2.2',  margin: 0 }}>
+                    <ol style={{ color: '#a0aec0', fontSize: '1rem', lineHeight: '2.2', margin: 0 }}>
                         {round3Rules.map((rule) => (
                             <li key={rule.id} style={{ marginBottom: '0.5rem' }} dangerouslySetInnerHTML={{ __html: rule.text }} />
                         ))}
                     </ol>
                 </div>
 
-                <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
                     gap: '30px',
                     marginBottom: '2rem',
                     flexWrap: 'wrap'
@@ -519,9 +811,9 @@ const JasmineRevelation = () => {
                     <p style={{ textAlign: 'center', color: '#667eea', marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.1rem' }}>
                         Click cells to reveal letters ({selectedCells.length}/{MAX_REVEAL} selected)
                     </p>
-                    
-                    <div style={{ 
-                        display: 'grid', 
+
+                    <div style={{
+                        display: 'grid',
                         gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
                         gap: '15px',
                         maxWidth: '500px',
@@ -539,8 +831,8 @@ const JasmineRevelation = () => {
                                     flexDirection: 'column',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    background: selectedCells.includes(index) 
-                                        ? 'rgba(245, 175, 25, 0.3)' 
+                                    background: selectedCells.includes(index)
+                                        ? 'rgba(245, 175, 25, 0.3)'
                                         : 'rgba(255,255,255,0.08)',
                                     border: selectedCells.includes(index)
                                         ? '3px solid #f5af19'
@@ -550,8 +842,8 @@ const JasmineRevelation = () => {
                                     transition: 'all 0.2s ease'
                                 }}
                             >
-                                <span style={{ 
-                                    fontSize: '2rem', 
+                                <span style={{
+                                    fontSize: '2rem',
                                     fontWeight: 'bold',
                                     color: selectedCells.includes(index) ? '#f5af19' : 'rgba(255,255,255,0.4)'
                                 }}>
@@ -569,9 +861,9 @@ const JasmineRevelation = () => {
                             <p style={{ color: '#a0aec0', marginBottom: '0.5rem', fontSize: '1rem' }}>
                                 Revealed Letters:
                             </p>
-                            <p style={{ 
-                                fontSize: '2rem', 
-                                color: '#f5af19', 
+                            <p style={{
+                                fontSize: '2rem',
+                                color: '#f5af19',
                                 letterSpacing: '12px',
                                 fontFamily: 'monospace'
                             }}>
@@ -607,7 +899,7 @@ const JasmineRevelation = () => {
                             }}
                         />
                     </div>
-                    
+
                     {error && (
                         <motion.p
                             initial={{ opacity: 0, y: -10 }}
@@ -617,11 +909,11 @@ const JasmineRevelation = () => {
                             {error}
                         </motion.p>
                     )}
-                    
+
                     <div style={{ marginBottom: '1rem', color: wrongAttempts >= 2 ? '#ef4444' : '#22c55e', fontSize: '1.1rem' }}>
                         Attempts Left: {getAttemptsLeft()}/{MAX_ATTEMPTS}
                     </div>
-                    
+
                     <button
                         type="submit"
                         disabled={isSubmitting || !answer.trim()}
