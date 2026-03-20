@@ -130,8 +130,8 @@ const updateUser = async (req, res) => {
                 };
             }
 
-            // Check for existing 6-hour lockout
-            const LOCKOUT_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+            // Check for existing 2-hour lockout
+            const LOCKOUT_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
             if (user.Round2Progress.round2LockedAt) {
                 const lockoutTime = new Date(user.Round2Progress.round2LockedAt).getTime();
                 const now = Date.now();
@@ -220,7 +220,7 @@ const updateUser = async (req, res) => {
                             success: false,
                             isCorrect: false,
                             isLocked: true,
-                            message: 'Too many failed attempts! You are locked out for 6 hours.',
+                            message: 'Too many failed attempts! You are locked out for 2 hours.',
                             lockoutUntil: user.Round2Progress.round2LockedAt
                         });
                     }
