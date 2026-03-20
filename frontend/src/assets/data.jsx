@@ -42,7 +42,7 @@ export const round2Levels = {
         id: 3,
         name: "Final Riddle",
         route: "/final-cipher",
-        puzzleString: "Q C R X E T S A Z C O D E P L M Y K R",
+        puzzleString: "O E S X C D Q T O Z R M A E C L P R",
         hint: "Combine both clues to reveal the hidden word"
     }
 };
