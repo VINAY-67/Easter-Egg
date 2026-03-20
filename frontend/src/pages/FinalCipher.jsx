@@ -31,12 +31,12 @@ const FinalCipher = () => {
         if (progress.round2LockedAt) {
             const lockoutTime = new Date(progress.round2LockedAt).getTime();
             const now = Date.now();
-            const sixHours = 6 * 60 * 60 * 1000;
+            const twoHours = 2 * 60 * 60 * 1000;
             const timePassed = now - lockoutTime;
             
-            if (timePassed < sixHours) {
+            if (timePassed < twoHours) {
                 setIsLocked(true);
-                setLockoutTimeLeft(Math.ceil((sixHours - timePassed) / 1000));
+                setLockoutTimeLeft(Math.ceil((twoHours - timePassed) / 1000));
             }
         }
     }, [user]);
@@ -103,7 +103,7 @@ const FinalCipher = () => {
                     const lockoutTime = data.lockoutUntil ? new Date(data.lockoutUntil).getTime() : Date.now();
                     const remainingMs = lockoutTime + (6 * 60 * 60 * 1000) - Date.now();
                     setLockoutTimeLeft(Math.ceil(remainingMs / 1000));
-                    throw new Error(data.message || 'You are locked out for 6 hours.');
+                    throw new Error(data.message || 'You are locked out for 2 hours.');
                 }
                 
                 const newAttempts = wrongAttempts + 1;
@@ -111,7 +111,7 @@ const FinalCipher = () => {
                 
                 if (newAttempts >= MAX_ATTEMPTS) {
                     setIsLocked(true);
-                    setLockoutTimeLeft(6 * 60 * 60);
+                    setLockoutTimeLeft(2 * 60 * 60);
                 }
                 
                 throw new Error(data.message || 'Incorrect. Combine your clues to find the answer.');
@@ -212,32 +212,6 @@ const FinalCipher = () => {
                         <p style={{ color: '#94a3b8', fontSize: '2rem', letterSpacing: '8px', fontFamily: 'monospace' }}>
                             {levelData.puzzleString}
                         </p>
-                        {userProgress.clue1 && userProgress.clue2 && (
-                            <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                                <div style={{ 
-                                    background: 'rgba(102, 126, 234, 0.1)', 
-                                    border: '1px solid rgba(102, 126, 234, 0.3)',
-                                    borderRadius: '8px',
-                                    padding: '10px 20px'
-                                }}>
-                                    <span style={{ color: '#667eea', fontSize: '0.8rem' }}>Clue 1:</span>
-                                    <span style={{ color: '#fff', fontSize: '1.2rem', marginLeft: '10px', fontFamily: 'monospace' }}>
-                                        {userProgress.clue1}
-                                    </span>
-                                </div>
-                                <div style={{ 
-                                    background: 'rgba(118, 75, 162, 0.1)', 
-                                    border: '1px solid rgba(118, 75, 162, 0.3)',
-                                    borderRadius: '8px',
-                                    padding: '10px 20px'
-                                }}>
-                                    <span style={{ color: '#764ba2', fontSize: '0.8rem' }}>Clue 2:</span>
-                                    <span style={{ color: '#fff', fontSize: '1.2rem', marginLeft: '10px', fontFamily: 'monospace' }}>
-                                        {userProgress.clue2}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
                         <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '1.5rem', fontStyle: 'italic' }}>
                             {levelData.hint}
                         </p>

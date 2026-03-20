@@ -90,26 +90,58 @@ const RiddleInput = ({
     }
 
     if (isLocked) {
-        const isSixHourLockout = lockoutTimeLeft > 3600;
-        const displayTime = isSixHourLockout 
-            ? `${Math.ceil(lockoutTimeLeft / 3600)} hours`
-            : `${lockoutTimeLeft} seconds`;
+        const isLongLockout = lockoutTimeLeft > 3600;
+        const hours = Math.floor(lockoutTimeLeft / 3600);
+        const minutes = Math.floor((lockoutTimeLeft % 3600) / 60);
+        const seconds = lockoutTimeLeft % 60;
+        
+        let displayTime = '';
+        if (hours > 0) {
+            displayTime = `${hours} hour${hours > 1 ? 's' : ''}`;
+            if (minutes > 0) {
+                displayTime += ` ${minutes} min${minutes > 1 ? 's' : ''}`;
+            }
+        } else {
+            displayTime = `${minutes} min${minutes !== 1 ? 's' : ''} ${seconds} sec${seconds !== 1 ? 's' : ''}`;
+        }
         
         return (
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className="riddle-locked"
             >
                 <div className="lockout-icon">🔒</div>
-                <h2>Too many attempts!</h2>
+                <h2>Too Many Attempts!</h2>
                 <p className="lockout-message">
-                    You have exhausted all attempts. Try again in <span className="countdown">{displayTime}</span>.
+                    You have exhausted all your attempts.
                 </p>
+                <div className="lockout-timer">
+                    <p>Try again in</p>
+                    <div className="timer-display">
+                        <div className="time-value">
+                            <span className="time-number">{String(hours).padStart(2, '0')}</span>
+                            <span className="time-label">HOURS</span>
+                        </div>
+                        <span className="time-separator">:</span>
+                        <div className="time-value">
+                            <span className="time-number">{String(minutes).padStart(2, '0')}</span>
+                            <span className="time-label">MIN</span>
+                        </div>
+                        <span className="time-separator">:</span>
+                        <div className="time-value">
+                            <span className="time-number">{String(seconds).padStart(2, '0')}</span>
+                            <span className="time-label">SEC</span>
+                        </div>
+                    </div>
+                </div>
                 <div className="lockout-progress">
                     <div 
                         className="lockout-bar" 
-                        style={{ width: `${isSixHourLockout ? 100 : (lockoutTimeLeft / 30) * 100}%` }}
+                        style={{ 
+                            width: `${isLongLockout ? 100 : (lockoutTimeLeft / 7200) * 100}%`,
+                            transition: 'width 1s linear'
+                        }}
                     />
                 </div>
             </motion.div>
@@ -376,45 +408,109 @@ const RiddleInput = ({
                 .riddle-locked {
                     text-align: center;
                     padding: 3rem;
-                    background: rgba(239, 68, 68, 0.1);
-                    border: 1px solid rgba(239, 68, 68, 0.3);
-                    border-radius: 20px;
+                    background: rgba(239, 68, 68, 0.05);
+                    border: 2px solid rgba(239, 68, 68, 0.3);
+                    border-radius: 24px;
+                    backdrop-filter: blur(10px);
                 }
 
                 .lockout-icon {
-                    font-size: 4rem;
-                    margin-bottom: 1rem;
+                    font-size: 5rem;
+                    margin-bottom: 1.5rem;
+                    animation: pulse 2s ease-in-out infinite;
+                }
+
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); opacity: 0.8; }
+                    50% { transform: scale(1.1); opacity: 1; }
                 }
 
                 .riddle-locked h2 {
                     color: #ef4444;
-                    margin: 0 0 1rem;
+                    margin: 0 0 0.5rem;
+                    font-size: 2rem;
+                    font-weight: 700;
+                    letter-spacing: 2px;
                 }
 
                 .lockout-message {
                     color: #a0aec0;
-                    margin: 0;
+                    margin: 0 0 2rem;
+                    font-size: 1.1rem;
                 }
 
-                .lockout-message .countdown {
+                .lockout-timer {
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                    border-radius: 16px;
+                    padding: 1.5rem 2rem;
+                    display: inline-block;
+                    margin-bottom: 1.5rem;
+                }
+
+                .lockout-timer p {
                     color: #ef4444;
-                    font-weight: bold;
-                    font-size: 1.2rem;
+                    margin: 0 0 1rem;
+                    font-size: 0.9rem;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                }
+
+                .timer-display {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                }
+
+                .time-value {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    min-width: 50px;
+                }
+
+                .time-number {
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    color: #fff;
+                    font-family: 'JetBrains Mono', monospace;
+                    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+                }
+
+                .time-label {
+                    font-size: 0.6rem;
+                    color: #ef4444;
+                    letter-spacing: 2px;
+                    margin-top: 0.25rem;
+                }
+
+                .time-separator {
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    color: #ef4444;
+                    animation: blink 1s step-end infinite;
+                }
+
+                @keyframes blink {
+                    50% { opacity: 0.3; }
                 }
 
                 .lockout-progress {
                     width: 100%;
-                    height: 6px;
+                    max-width: 300px;
+                    height: 8px;
                     background: rgba(239, 68, 68, 0.2);
-                    border-radius: 3px;
-                    margin-top: 1.5rem;
+                    border-radius: 4px;
+                    margin: 0 auto;
                     overflow: hidden;
                 }
 
                 .lockout-bar {
                     height: 100%;
-                    background: #ef4444;
-                    transition: width 1s linear;
+                    background: linear-gradient(90deg, #ef4444, #f87171);
+                    border-radius: 4px;
+                    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
                 }
             `}</style>
         </div>
